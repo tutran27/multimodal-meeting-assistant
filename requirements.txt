@@ -1,0 +1,10 @@
+--extra-index-url https://www.paddlepaddle.org.cn/packages/stable/cu118/
+transformers
+torch
+paddleocr[all]
+paddlepaddle-gpu==3.2.0
+python-dotenv
+fastapi
+pydantic-settings
+uvicorn
+langchain_groq
