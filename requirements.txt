@@ -8,3 +8,5 @@ fastapi
 pydantic-settings
 uvicorn
 langchain_groq
+torchvision
+huggingface_hub

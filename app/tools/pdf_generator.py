@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -11,66 +12,48 @@ from app.core.config import settings
 from app.schemas.state import RunState
 from app.services.storage_service import StorageService
 
-
-def _find_font() -> Path | None:
+def _register_font() -> str:
     candidates = [
         settings.report_font_path,
+        Path("D:/project/Multi-modal Smart Personal Assistant/assets/fonts/timesnewroman.ttf"),
+        Path("C:/Windows/Fonts/timesnewroman.ttf"),
         Path("C:/Windows/Fonts/arial.ttf"),
-        Path("C:/Users/Admin/Downloads/DejaVuSans.ttf"),
+        
     ]
     for candidate in candidates:
         if candidate and Path(candidate).exists():
-            return Path(candidate)
-    return None
-
-
-def _register_font() -> str:
-    if font_path := _find_font():
-        pdfmetrics.registerFont(TTFont("ReportFont", str(font_path)))
-        return "ReportFont"
+            pdfmetrics.registerFont(TTFont("ReportFont", str(candidate)))
+            return "ReportFont"
     return "Helvetica"
 
-
-def _get_custom_styles(font_name: str) -> dict[str, ParagraphStyle]:
+def _get_styles(font_name: str) -> dict[str, ParagraphStyle]:
     styles = getSampleStyleSheet()
     return {
-        "title": ParagraphStyle(
-            "CustomTitle",
-            parent=styles["Title"],
-            fontName=font_name,
-            alignment=TA_CENTER,
-            spaceAfter=14,
-        ),
-        "heading": ParagraphStyle(
-            "CustomHeading",
-            parent=styles["Heading2"],
-            fontName=font_name,
-            spaceBefore=10,
-            spaceAfter=6,
-        ),
-        "body": ParagraphStyle(
-            "CustomBody",
-            parent=styles["BodyText"],
-            fontName=font_name,
-            leading=16,
-        ),
+        "title": ParagraphStyle("CustomTitle", parent=styles["Title"], fontName=font_name, alignment=TA_CENTER, spaceAfter=14),
+        "heading": ParagraphStyle("CustomHeading", parent=styles["Heading2"], fontName=font_name, spaceBefore=10, spaceAfter=6),
+        "body": ParagraphStyle("CustomBody", parent=styles["BodyText"], fontName=font_name, leading=16),
     }
 
+def generate_pdf(state: RunState) -> dict:
+    output_dir = settings.output_dir / state.session_id
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / "meeting_report.pdf"
 
-def _build_decisions_section(state: RunState, styles: dict) -> list:
-    story = [Paragraph("Key Decisions", styles["heading"])]
-    decisions = state.extraction.decisions or ["Chưa ghi nhận quyết định."]
-    for decision in decisions:
-        story.append(Paragraph(f"• {decision}", styles["body"]))
-    return story
+    font_name = _register_font()
+    styles = _get_styles(font_name)
 
-
-def _build_action_items_section(state: RunState, font_name: str, styles: dict) -> list:
+    # 1. Executive Summary & Key Decisions
     story = [
-        Spacer(1, 8),
-        Paragraph("Action Items", styles["heading"]),
+        Paragraph(settings.pdf_default_title, styles["title"]),
+        Paragraph("Executive Summary", styles["heading"]),
+        Paragraph(state.extraction.summary or "Chưa có tóm tắt.", styles["body"]),
+        Paragraph("Key Decisions", styles["heading"]),
     ]
+    for decision in state.extraction.decisions or ["Chưa ghi nhận quyết định."]:
+        story.append(Paragraph(f"• {decision}", styles["body"]))
 
+    # 2. Action Items Table
+    story.extend([Spacer(1, 8), Paragraph("Action Items", styles["heading"])])
     rows = [["Task", "Owner", "Deadline", "Evidence"]]
     for item in state.extraction.action_items:
         rows.append([
@@ -79,7 +62,6 @@ def _build_action_items_section(state: RunState, font_name: str, styles: dict) -
             item.deadline or "Chưa rõ",
             ", ".join(item.evidence_ids) or "Không có",
         ])
-
     if len(rows) == 1:
         rows.append(["Chưa có action item", "", "", ""])
 
@@ -98,67 +80,32 @@ def _build_action_items_section(state: RunState, font_name: str, styles: dict) -
         ])
     )
     story.append(table)
-    return story
 
+    # 3. Tool Results (Calendar & Web Search)
+    for tool_name, heading in [("calendar_freebusy", "Calendar Suggestions"), ("web_search", "Partner Background")]:
+        res = next((v for v in state.tool_results.values() if v.get("_tool_name") == tool_name), None)
+        if res:
+            story.append(Paragraph(heading, styles["heading"]))
+            if tool_name == "calendar_freebusy":
+                for slot in res.get("candidate_slots", []):
+                    story.append(Paragraph(f"• {slot['start']} → {slot['end']}", styles["body"]))
+            elif tool_name == "web_search":
+                for result in res.get("results", []):
+                    story.append(
+                        Paragraph(
+                            f"• {result.get('title', '')}: {result.get('snippet', '')} ({result.get('url', '')})",
+                            styles["body"],
+                        )
+                    )
 
-def _build_calendar_section(state: RunState, styles: dict) -> list:
-    story = []
-    calendar_result = next(
-        (v for v in state.tool_results.values() if v.get("_tool_name") == "calendar_freebusy"),
-        None,
-    )
-    if calendar_result:
-        story.append(Paragraph("Calendar Suggestions", styles["heading"]))
-        for slot in calendar_result.get("candidate_slots", []):
-            story.append(Paragraph(f"• {slot['start']} → {slot['end']}", styles["body"]))
-    return story
+    # 4. Evidence Appendix
+    if state.all_evidence:
+        story.append(Paragraph("Evidence Appendix", styles["heading"]))
+        for evidence in state.all_evidence:
+            story.append(Paragraph(f"[{evidence.evidence_id}] {evidence.content}", styles["body"]))
 
-
-def _build_web_section(state: RunState, styles: dict) -> list:
-    story = []
-    web_result = next(
-        (v for v in state.tool_results.values() if v.get("_tool_name") == "web_search"),
-        None,
-    )
-    if web_result:
-        story.append(Paragraph("Partner Background", styles["heading"]))
-        for result in web_result.get("results", []):
-            story.append(
-                Paragraph(
-                    f"• {result.get('title', '')}: {result.get('snippet', '')} ({result.get('url', '')})",
-                    styles["body"],
-                )
-            )
-    return story
-
-def _build_evidence_section(state: RunState, styles: dict) -> list:
-    story = [Paragraph("Evidence Appendix", styles["heading"])]
-    for evidence in state.all_evidence:
-        story.append(Paragraph(f"[{evidence.evidence_id}] {evidence.content}", styles["body"]))
-    return story
-
-
-def generate_pdf(state: RunState) -> dict:
-    output_dir = settings.output_dir / state.session_id
-    output_dir.mkdir(parents=True, exist_ok=True)
-    output_path = output_dir / "meeting_report.pdf"
-
-    font_name = _register_font()
-    styles = _get_custom_styles(font_name)
-
-    story = [
-        Paragraph(settings.pdf_default_title, styles["title"]),
-        Paragraph("Executive Summary", styles["heading"]),
-        Paragraph(state.extraction.summary or "Chưa có tóm tắt.", styles["body"]),
-    ]
-
-    story.extend(_build_decisions_section(state, styles))
-    story.extend(_build_action_items_section(state, font_name, styles))
-    story.extend(_build_calendar_section(state, styles))
-    story.extend(_build_web_section(state, styles))
-    story.extend(_build_evidence_section(state, styles))
-
-    document = SimpleDocTemplate(
+    # Render PDF
+    doc = SimpleDocTemplate(
         str(output_path),
         pagesize=A4,
         rightMargin=1.5 * cm,
@@ -166,7 +113,7 @@ def generate_pdf(state: RunState) -> dict:
         topMargin=1.5 * cm,
         bottomMargin=1.5 * cm,
     )
-    document.build(story)
+    doc.build(story)
 
     return {
         "file_path": str(output_path),

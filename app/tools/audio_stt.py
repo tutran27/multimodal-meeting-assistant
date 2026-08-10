@@ -27,23 +27,25 @@ def transcribe_audio(file_path: str | Path) -> list[EvidenceRef]:
                 temperature=0.0,
                 timestamp_granularities=["segment"],
             )
+        trans_dict = transcription.model_dump() if hasattr(transcription, 'model_dump') else (transcription.dict() if hasattr(transcription, 'dict') else vars(transcription))
     except Exception as exc:
         raise ToolExecutionError(f"Groq STT failed: {exc}") from exc
 
-    raw_segments = getattr(transcription, "segments", None) or []
+    raw_segments = trans_dict.get("segments", []) 
     evidence: list[EvidenceRef] = []
 
     if raw_segments:
         for index, segment in enumerate(raw_segments, start=1):
             data = segment if isinstance(segment, dict) else (segment.model_dump() if hasattr(segment, "model_dump") else vars(segment))
-            if text := str(data.get("text", "")).strip():
+            text= str(data.get("text", "")).strip()
+            if text:
                 evidence.append(
                     EvidenceRef(
                         evidence_id=f"AUDIO_{index:03d}",
                         source_type=SourceType.AUDIO,
                         source_id=path.name,
                         content=text,
-                        speaker=data.get("speaker"),
+                        speaker=data.get("speaker", "Unknown"),
                         metadata={"start": data.get("start"), "end": data.get("end")},
                     )
                 )
