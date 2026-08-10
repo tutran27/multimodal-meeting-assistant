@@ -1,5 +1,4 @@
 import re
-import sys
 from pathlib import Path
 
 from app.core.constants import ScriptType, SourceType
@@ -14,7 +13,6 @@ def classify_script(text: str) -> ScriptType:
 
     if any(word in lower for word in agenda_words):
         return ScriptType.PREPARED_AGENDA
-
     if any(word in lower for word in minutes_words):
         return ScriptType.MEETING_MINUTES
     if re.search(r"^[^:\n]{1,40}:\s+.+", text, flags=re.MULTILINE):
@@ -22,7 +20,8 @@ def classify_script(text: str) -> ScriptType:
     return ScriptType.UNKNOWN
 
 
-def parse_script(file_path: str | Path | None = None, raw_text: str | None = None) -> tuple[ScriptType, list[EvidenceRef]]:
+def parse_script(file_path: str | Path | None = None,
+                 raw_text: str | None = None) -> tuple[ScriptType, list[EvidenceRef]]:
     if raw_text is None:
         if not file_path:
             return ScriptType.UNKNOWN, []
@@ -34,6 +33,9 @@ def parse_script(file_path: str | Path | None = None, raw_text: str | None = Non
 
     evidence = []
     for idx, block in enumerate(blocks, start=1):
+        speaker = None
+        content = block
+        
         match = re.match(r"^([^:]{1,40}):\s*(.+)$", block)
         if match:
             speaker = match.group(1).strip()
@@ -41,7 +43,7 @@ def parse_script(file_path: str | Path | None = None, raw_text: str | None = Non
 
         evidence.append(
             EvidenceRef(
-                evidence_id=f"SCRIPT_{index:03d}",
+                evidence_id=f"SCRIPT_{idx:03d}",
                 source_type=SourceType.MEETING_SCRIPT,
                 source_id=source_name,
                 content=content,
@@ -55,10 +57,13 @@ def parse_script(file_path: str | Path | None = None, raw_text: str | None = Non
 
 
 if __name__ == "__main__":
-    if sys.platform == "win32":
-        sys.stdout.reconfigure(encoding="utf-8")
-    demo = "Nam: Minh sẽ gửi báo giá trước thứ Sáu.\nLan: Hẹn lịch follow-up."
+    demo = (
+        "Chương trình họp thống nhất báo giá.\n\n"
+        "Nam: Minh sẽ gửi báo giá cho khách trước thứ Sáu.\n"
+        "Tất cả các bên cùng thống nhất ý kiến trên.\n"
+        "Lan: Tôi sẽ hỗ trợ kiểm tra file báo giá."
+    )
     kind, items = parse_script(raw_text=demo)
-    print(kind)
+    print("Script Type:", kind)
     for item in items:
         print(item.model_dump())

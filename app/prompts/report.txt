@@ -1,0 +1,11 @@
+Tạo nội dung báo cáo từ dữ liệu đã được xác minh.
+
+Không bổ sung thông tin ngoài evidence.
+
+Báo cáo gồm:
+- Executive Summary
+- Decisions
+- Action Items
+- Calendar Suggestions
+- Partner Background
+- Evidence Appendix

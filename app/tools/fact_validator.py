@@ -1,5 +1,4 @@
 import re
-import sys
 from datetime import date
 
 from app.core.constants import VerificationStatus
@@ -62,11 +61,7 @@ def validate_extraction(extraction: MeetingExtraction) -> FactValidationResult:
 
     return FactValidationResult(normalized_entities=normalized_entities, issues=issues)
 
-
 if __name__ == "__main__":
-    if sys.platform == "win32":
-        sys.stdout.reconfigure(encoding="utf-8")
-
     from app.schemas.extraction import ActionItem
 
     demo = MeetingExtraction(
@@ -79,6 +74,5 @@ if __name__ == "__main__":
             )
         ]
     )
-
     result = validate_extraction(demo)
     print(result.model_dump_json(indent=2))

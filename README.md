@@ -211,4 +211,5 @@ python -m app.tools.gmail_draft
 ---
 
 ## 📜 Giấy Phép & Đóng Góp
-Dự án được phát triển phục vụ mục đích cá nhân và doanh nghiệp. Mọi đóng góp (Pull Request / Issue) luôn được hoan nghênh!
+Dự án được phát triển phục vụ mục đích cá nhân và doanh nghiệp. 
+Mọi đóng góp (Pull Request / Issue) luôn được hoan nghênh!

@@ -1,5 +1,4 @@
 import base64
-import sys
 from email.message import EmailMessage
 from mimetypes import guess_type
 from pathlib import Path
@@ -35,6 +34,7 @@ def create_email_draft(recipient: str, subject: str, body: str, attachment_path:
 
 
 if __name__ == "__main__":
+    import sys
     if sys.platform == "win32":
         sys.stdout.reconfigure(encoding="utf-8")
     try:
