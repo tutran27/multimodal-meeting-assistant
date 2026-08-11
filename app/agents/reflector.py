@@ -7,7 +7,7 @@ from app.services.llm_service import get_llm
 def reflect(state: RunState) -> ReflectionResult:
     context = {
         "request": state.user_request,
-        "extraction": state.extraction.model_dump(mode="json"),
+        "extraction": state.extraction.model_dump(mode="json"), 
         "plan": [step.model_dump(mode="json") for step in state.plan],
         "tool_results": state.tool_results,
         "report_path": state.report_path,

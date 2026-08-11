@@ -30,7 +30,7 @@ class RunState(BaseModel):
     plan: list[PlanStep] = Field(default_factory=list)
     tool_results: dict[str, Any] = Field(default_factory=dict)
     validation_issues: list[ValidationIssue] = Field(default_factory=list)
-    reflection: ReflectionResult | None = None
+    reflection: ReflectionResult | None = None 
     report_path: str | None = None
     email_draft_id: str | None = None
     status: WorkflowStatus = WorkflowStatus.CREATED
