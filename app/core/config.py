@@ -1,9 +1,13 @@
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
+from dotenv import load_dotenv
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import torch 
+
+# Load environment variables from .env file into os.environ
+load_dotenv()
 
 class Settings(BaseSettings):
     app_name: str = "Multi-modal Smart Personal Assistant"

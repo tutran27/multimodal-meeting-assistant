@@ -1,13 +1,7 @@
-from pathlib import Path
-
+from app.core.prompts import EXTRACTION_PROMPT
 from app.schemas.extraction import MeetingExtraction
 from app.schemas.state import RunState
 from app.services.llm_service import get_llm
-
-
-def _prompt_text() -> str:
-    prompt_path = Path(__file__).parents[1] / "prompts" / "extraction.txt"
-    return prompt_path.read_text(encoding="utf-8")
 
 
 def extract_meeting_information(state: RunState) -> MeetingExtraction:
@@ -17,7 +11,7 @@ def extract_meeting_information(state: RunState) -> MeetingExtraction:
     )
 
     prompt = (
-        f"{_prompt_text()}\n\n"
+        f"{EXTRACTION_PROMPT}\n\n"
         f"USER REQUEST:\n{state.user_request}\n\n"
         f"SCRIPT TYPE: {state.script_type.value}\n\n"
         f"EVIDENCE:\n{evidence_text}"

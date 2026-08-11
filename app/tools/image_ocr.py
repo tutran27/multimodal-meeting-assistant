@@ -16,7 +16,6 @@ def extract_image_text(file_path: str | Path) -> list[EvidenceRef]:
 
     try:
         rec_model_dir = snapshot_download(repo_id=settings.ocr_rec_model_repo)
-
         pipeline = PaddleOCR(
             text_recognition_model_dir=rec_model_dir,
             device=settings.ocr_device,

@@ -57,13 +57,8 @@ def parse_script(file_path: str | Path | None = None,
 
 
 if __name__ == "__main__":
-    demo = (
-        "Chương trình họp thống nhất báo giá.\n\n"
-        "Nam: Minh sẽ gửi báo giá cho khách trước thứ Sáu.\n"
-        "Tất cả các bên cùng thống nhất ý kiến trên.\n"
-        "Lan: Tôi sẽ hỗ trợ kiểm tra file báo giá."
-    )
-    kind, items = parse_script(raw_text=demo)
+    file_path=r"C:\Users\dinht\Downloads\Bản sao của DON XIN CAP HB.docx"
+    kind, items = parse_script(file_path=file_path)
     print("Script Type:", kind)
     for item in items:
         print(item.model_dump())
