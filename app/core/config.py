@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     groq_api_key: str | None = None
     groq_llm_model: str = "openai/gpt-oss-20b"
     groq_stt_model: str = "whisper-large-v3-turbo"
+    
+    # OpenRouter LLM
+    openrouter_api_key: str | None = None
+    openrouter_llm_model: str = "qwen/qwen-2.5-72b-instruct"
+    
     llm_temperature: float = 0.0
     llm_timeout_seconds: int = 60
     llm_max_retries: int = 2

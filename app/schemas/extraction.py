@@ -16,15 +16,18 @@ class ActionItem(BaseModel):
     priority: str = "medium"
     duration_minutes: int | None = None
     evidence_ids: list[str] = Field(default_factory=list)
-    status: VerificationStatus = VerificationStatus.UNVERIFIED
+    status: VerificationStatus = Field(
+        default=VerificationStatus.UNVERIFIED,
+        description="Trạng thái xác minh bằng chứng: verified, partially_verified, unverified hoặc conflicted. Không dùng pending/todo/in_progress/done.",
+    )
 
 class MeetingExtraction(BaseModel):
-    summary: str = ""
-    participants: list[str] = Field(default_factory=list)
-    organizations: list[str] = Field(default_factory=list)
-    decisions: list[str] = Field(default_factory=list)
-    action_items: list[ActionItem] = Field(default_factory=list)
-    unresolved_questions: list[str] = Field(default_factory=list)
+    summary: str = Field(default="", description="Tóm tắt chi tiết nội dung cuộc họp")
+    participants: list[str] = Field(default_factory=list, description="Danh sách tên những người tham gia (dạng chuỗi văn bản thuần túy)")
+    organizations: list[str] = Field(default_factory=list, description="Danh sách các công ty/tổ chức (dạng chuỗi văn bản thuần túy)")
+    decisions: list[str] = Field(default_factory=list, description="Danh sách các quyết định (chuỗi văn bản thuần túy, KHÔNG tạo object hay dict)")
+    action_items: list[ActionItem] = Field(default_factory=list, description="Danh sách công việc cần thực hiện")
+    unresolved_questions: list[str] = Field(default_factory=list, description="Danh sách câu hỏi chưa giải quyết (chuỗi văn bản thuần túy, KHÔNG tạo object)")
 
 if __name__ == "__main__":
     data = MeetingExtraction(

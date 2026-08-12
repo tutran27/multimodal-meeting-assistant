@@ -1,56 +1,67 @@
-import re
-
+from sentence_transformers import CrossEncoder
 from app.schemas.evidence import EvidenceRef
+from app.core.constants import SourceType
 
+model = CrossEncoder("BAAI/bge-reranker-v2-m3")
 
-def _tokens(text: str) -> set[str]:
-    """Tách từ tiếng Việt / tiếng Anh thành tập hợp các token."""
-    return set(re.findall(r"[\wÀ-ỹ]+", text.lower()))
-
-
-def align_sources(
+def align_sources_cross_encoder(
     evidence: list[EvidenceRef],
-    threshold: float = 0.25,
+    threshold: float = 0.7,
 ) -> list[dict]:
-    """Gom nhóm các bằng chứng (evidence) tương đồng dựa trên Jaccard Similarity.
-
-    Args:
-        evidence: Danh sách các đối tượng EvidenceRef.
-        threshold: Ngưỡng độ tương đồng Jaccard tối thiểu để gom nhóm (default: 0.25).
-
-    Returns:
-        Danh sách các dictionary nhóm bằng chứng.
-    """
     groups: list[dict] = []
 
     for item in evidence:
-        item_tokens = _tokens(item.content)
         best_group = None
-        best_score = 0.0
+        best_score = -1.0
 
-        for group in groups:
-            group_tokens = _tokens(group["representative_text"])
-            
-            # Score = Giao / Hợp
-            score = len(item_tokens & group_tokens) / len(item_tokens | group_tokens) if union else 0.0
+        if groups:
+            pairs = [(item.content, g["representative_text"]) for g in groups]
+            scores = model.predict(pairs) 
 
-            if score > best_score:
-                best_group = group
-                best_score = score
+            for group, score in zip(groups, scores):
+                if score > best_score:
+                    best_score = float(score)
+                    best_group = group
 
         if best_group and best_score >= threshold:
             best_group["evidence_ids"].append(item.evidence_id)
         else:
-            groups.append(
-                {
-                    "group_id": f"GROUP_{len(groups) + 1:03d}",
-                    "representative_text": item.content,
-                    "evidence_ids": [item.evidence_id],
-                }
-            )
+            groups.append({
+                "group_id": f"GROUP_{len(groups) + 1:03d}",
+                "representative_text": item.content,
+                "evidence_ids": [item.evidence_id],
+            })
 
     return groups
 
-
 if __name__ == "__main__":
-    print(align_sources([]))
+    sample_evidence = [
+        EvidenceRef(
+            evidence_id="AUDIO_01",
+            source_type=SourceType.AUDIO,
+            source_id="meeting.mp3",
+            content="Minh bảo chốt gửi báo giá trước thứ 6 tuần này nha.",
+        ),
+        EvidenceRef(
+            evidence_id="OCR_01",
+            source_type=SourceType.IMAGE,
+            source_id="invoice.jpg",
+            content="Hạn chót bản chào giá: Thứ Sáu - Anh Minh phụ trách",
+        ),
+        EvidenceRef(
+            evidence_id="TEXT_01",
+            source_type=SourceType.MEETING_SCRIPT,
+            source_id="notes.txt",  
+            content="Đặt lịch họp phòng 302 vào lúc 9h sáng thứ Hai.",
+        ),
+        EvidenceRef(
+            evidence_id="AUDIO_02",
+            source_type=SourceType.AUDIO,
+            source_id="call.mp3",
+            content="Sáng T2 tuần sau 9 giờ họp ở phòng ba trăm lẻ hai.",
+        ),
+    ]
+
+    res=align_sources_cross_encoder(sample_evidence)
+    for g in res:
+        print(g)

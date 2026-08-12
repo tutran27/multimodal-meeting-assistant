@@ -8,6 +8,8 @@ Hệ thống Trợ lý Cá nhân Đa phương thức thông minh (Multi-modal Sm
 
 ### 1. Sơ đồ Luồng Xử lý Chi tiết (Processing Pipeline)
 
+### 1. Sơ đồ Luồng Xử lý Chi tiết (Processing Pipeline)
+
 ```mermaid
 flowchart TD
     subgraph Inputs ["📥 Đầu Vào Đa Phương Thức (Multi-modal Inputs)"]
@@ -22,24 +24,31 @@ flowchart TD
         B3["Document Reader / Script Parser"]
     end
 
-    subgraph CoreAgent ["🧠 Trợ Lý Trung Tâm (Core Agent & Extraction)"]
+    subgraph Agents ["🧠 Hệ Thống Multi-Agent & Fact Checking"]
         C1["Script Classifier & Evidence Generator<br/>(script_parser.py)"]
-        C2["LLM Meeting Extraction<br/>(Groq Llama-3.1-8b)"]
-        C3["Evidence-based Fact Validation<br/>(fact_validator.py)"]
+        C2["LLM Information Extractor<br/>(Map-Reduce Async / extractor.py)"]
+        C3["Evidence Fact Validator<br/>(fact_validator.py)"]
+        C4["Execution Planner Agent<br/>(planner.py)"]
+        C5["Policy Gate & Human Approval<br/>(policy_gate.py)"]
     end
 
-    subgraph ToolIntegrations ["🛠️ Tích Hợp Công Cụ (Tool Execution)"]
-        D1["🌐 Web Search (Tavily API / DDGS)"]
-        D2["📅 Google Calendar (Free/Busy Slots)"]
+    subgraph ToolIntegrations ["🛠️ Tích Hợp Công Cụ & Executor"]
+        D0["Tool Executor (executor.py)"]
+        D1["🌐 Web Search (Tavily API)"]
+        D2["📅 Google Calendar API"]
         D3["📄 PDF Generator (ReportLab A4)"]
         D4["✉️ Gmail Draft Generator (OAuth2)"]
     end
 
+    subgraph Audit ["🔍 Kiểm Thẩm & Đánh Giá (Reflection)"]
+        E0["Reflection Validator Agent<br/>(reflector.py)"]
+    end
+
     subgraph Outputs ["📤 Kết Quả Đầu Ra (Outputs)"]
-        E1["📜 Executive Summary & Decisions"]
-        E2["📋 Action Items Table"]
-        E3["📄 Meeting Report PDF (outputs/...)"]
-        E4["📧 Gmail Draft Ready to Send"]
+        F1["📜 Executive Summary & Decisions"]
+        F2["📋 Action Items Table"]
+        F3["📄 Meeting Report PDF (outputs/...)"]
+        F4["📧 Gmail Draft Ready to Send"]
     end
 
     %% Pipeline Connections
@@ -52,19 +61,21 @@ flowchart TD
     B3 --> C1
 
     C1 -->|"EvidenceRef Stream"| C2
-    C2 -->|"Raw Meeting Extraction"| C3
-    C3 -->|"Normalized State & Contact Matching"| D1
-    C3 --> D2
+    C2 -->|"Meeting Extraction"| C3
+    C3 -->|"Validated State & Evidence"| C4
+    C4 -->|"ExecutionPlan"| C5
+    C5 -->|"Approved Plan"| D0
 
-    C3 --> D3
-    D1 --> D3
-    D2 --> D3
+    D0 --> D1
+    D0 --> D2
+    D0 --> D3
     D3 --> D4
 
-    D3 --> E3
-    D4 --> E4
-    C2 --> E1
-    C3 --> E2
+    D0 --> E0
+    E0 -->|"Reflection Audit Passed"| F1
+    E0 --> F2
+    D3 --> F3
+    D4 --> F4
 ```
 
 ---
@@ -75,25 +86,23 @@ flowchart TD
 sequenceDiagram
     autonumber
     actor User as Người dùng / Hệ thống
-    participant Input as Multi-modal Input
-    participant Parser as Script Parser / OCR / STT
-    participant LLM as LLM Engine (Groq)
+    participant Parser as Script Parser / STT / OCR
+    participant Extractor as Extractor Agent (Map-Reduce)
     participant Val as Fact Validator
-    participant Tools as Web Search / Calendar
-    participant PDF as PDF Generator
-    participant Mail as Gmail Draft
+    participant Planner as Planner Agent
+    participant Gate as Policy Gate
+    participant Executor as Tool Executor
+    participant Reflector as Reflection Validator
 
-    User->>Input: Gửi file Âm thanh / Hình ảnh / Kịch bản họp
-    Input->>Parser: Chuyển đổi thành Văn bản & Trích xuất Evidence
-    Parser->>LLM: Gửi Prompt trích xuất thông tin kèm Evidence
-    LLM-->>Parser: Trả về Summary, Key Decisions, Action Items
-    Parser->>Val: Thẩm định thông tin & Đăng ký bằng chứng
-    Val->>Tools: Tra cứu thông tin đối tác (Tavily) & Kiểm tra Lịch (Calendar)
-    Tools-->>Val: Trả về thông tin bổ sung & Candidate Slots
-    Val->>PDF: Dựng báo cáo cuộc họp dạng PDF A4
-    PDF-->>User: Lưu PDF vào thư mục outputs/
-    Val->>Mail: Tạo Email Nháp kèm File PDF báo cáo
-    Mail-->>User: Email nháp sẵn sàng gửi trên Gmail
+    User->>Parser: Gửi file Âm thanh / Hình ảnh / Kịch bản họp
+    Parser->>Extractor: Chuyển đổi thành Evidence Stream & phân batch
+    Extractor-->>Val: Trích xuất thông tin có cấu trúc (Summary, Actions, Decisions)
+    Val->>Planner: Thẩm định bằng chứng & làm giàu thông tin danh bạ
+    Planner-->>Gate: Lập kế hoạch thực thi công cụ (ExecutionPlan)
+    Gate->>Executor: Phê duyệt kế hoạch (Policy Gate Check)
+    Executor->>Executor: Thực thi các Tool (Web Search, Calendar, PDF, Gmail Draft)
+    Executor->>Reflector: Gửi kết quả thực thi & trạng thái State
+    Reflector-->>User: Thẩm định chất lượng (Reflection Audit) & xuất báo cáo PDF/Email Nháp
 ```
 
 ---
@@ -101,10 +110,13 @@ sequenceDiagram
 ## ✨ Tính Năng Nổi Bật
 
 - **Xử lý Đa phương thức (Multi-modal Integration)**: Tích hợp Groq Whisper (STT) và PaddleOCR (PP-OCRv6) giúp đọc thông tin từ âm thanh, hình ảnh và văn bản.
-- **Bóc tách & Truy vết Bằng chứng (`EvidenceRef`)**: Mọi quyết định và công việc trích xuất từ cuộc họp đều có ID bằng chứng trích dẫn cụ thể (`SCRIPT_001`, `SCRIPT_002`), chống bịa đặt (Hallucination).
+- **Trích xuất Song song Map-Reduce (`extractor.py`)**: Tự động chia nhỏ evidence thành các batch và trích xuất song song bất đồng bộ qua LLM, loại bỏ hoàn toàn lỗi tràn token.
+- **Bóc tách & Truy vết Bằng chứng (`EvidenceRef`)**: Mọi quyết định và công việc trích xuất từ cuộc họp đều có ID bằng chứng trích dẫn cụ thể (`SCRIPT_001`, `AUDIO_001`), chống bịa đặt (Hallucination).
 - **Thẩm định Thực tế & Danh bạ (`fact_validator.py`)**: Tự động tra cứu danh bạ (`ContactRepository`), kiểm tra định dạng email và phát hiện hạn chót trong quá khứ (`past_deadline`).
-- **Tra cứu Web Thông minh (`web_search.py`)**: Sử dụng **Tavily Search API** (fallback DuckDuckGo) để tự động làm giàu thông tin đối tác.
-- **Xuất Báo cáo PDF Chuyên nghiệp (`pdf_generator.py`)**: Tự động sinh file PDF chuẩn khổ A4, trình bày đẹp mắt, hỗ trợ tiếng Việt Unicode với phông chữ Times New Roman / Arial.
+- **Lập Kế hoạch Thông minh (`planner.py`)**: Planner Agent tự động phân tích yêu cầu người dùng và xây dựng kịch bản gọi công cụ tối ưu (`ExecutionPlan`).
+- **Phê duyệt An toàn (`policy_gate.py`)**: Kiểm soát rủi ro các thao tác có ghi dữ liệu ngoại vi (Calendar, Email) và yêu cầu phê duyệt khi cần.
+- **Tự Kiểm Thẩm & Đánh Giá (`reflector.py`)**: Reflection Agent đánh giá toàn diện chất lượng kết quả (Coverage, Evidence, Consistency, Safety).
+- **Xuất Báo cáo PDF Chuyên nghiệp (`pdf_generator.py`)**: Tự động sinh file PDF chuẩn khổ A4, trình bày đẹp mắt, hỗ trợ tiếng Việt Unicode.
 - **Soạn Email Nháp Tự động (`gmail_draft.py`)**: Tích hợp Google OAuth2 để tạo bản nháp email đính kèm báo cáo PDF gửi sếp/đối tác.
 
 ---

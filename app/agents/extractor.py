@@ -1,91 +1,134 @@
+import asyncio
+import json
+import re
+from typing import Any
+from typing import List
+
 from app.core.prompts import EXTRACTION_PROMPT
-from app.schemas.extraction import MeetingExtraction
+from app.core.constants import VerificationStatus
+from app.schemas.evidence import EvidenceRef
+from app.schemas.extraction import ActionItem, MeetingExtraction
 from app.schemas.state import RunState
 from app.services.llm_service import get_llm
 
 
-def extract_meeting_information(state: RunState) -> MeetingExtraction:
+def _extract_json_object(text: str) -> dict[str, Any]:
+    """Lấy JSON object đầu tiên từ output LLM."""
+    match = re.search(r"\{.*\}", text, flags=re.DOTALL)
+    if not match:
+        raise ValueError(f"LLM không trả về JSON object hợp lệ: {text}")
+    return json.loads(match.group(0))
+
+
+def _normalize_action_item(item: dict[str, Any]) -> dict[str, Any]:
+    if "owner" not in item and "assigned_to" in item:
+        item["owner"] = item.pop("assigned_to")
+
+    status = item.get("status")
+    allowed_statuses = {status.value for status in VerificationStatus}
+    if status not in allowed_statuses:
+        item["status"] = VerificationStatus.UNVERIFIED.value
+
+    return item
+
+
+def _normalize_extraction_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    payload.setdefault("summary", "")
+    payload.setdefault("participants", [])
+    payload.setdefault("organizations", [])
+    payload.setdefault("decisions", [])
+    payload.setdefault("action_items", [])
+    payload.setdefault("unresolved_questions", [])
+    payload["action_items"] = [
+        _normalize_action_item(item)
+        for item in payload["action_items"]
+        if isinstance(item, dict)
+    ]
+    return payload
+
+
+async def _extract_batch(batch: List[EvidenceRef], user_request: str, script_type: str) -> MeetingExtraction:
+    """Map step: Trích xuất thông tin cho 1 batch evidence nhỏ."""
     evidence_text = "\n".join(
         f"[{item.evidence_id}] source={item.source_type.value}; speaker={item.speaker or 'unknown'}; text={item.content}"
-        for item in state.all_evidence
+        for item in batch
     )
-
     prompt = (
         f"{EXTRACTION_PROMPT}\n\n"
-        f"USER REQUEST:\n{state.user_request}\n\n"
-        f"SCRIPT TYPE: {state.script_type.value}\n\n"
-        f"EVIDENCE:\n{evidence_text}"
+        f"USER REQUEST:\n{user_request}\n\n"
+        f"SCRIPT TYPE:\n{script_type}\n\n"
+        f"EVIDENCE:\n{evidence_text}\n\n"
+        "Chỉ trả về một JSON object, không markdown, không giải thích.\n"
+        "JSON bắt buộc có các key: summary, participants, organizations, decisions, action_items, unresolved_questions.\n"
+        "Mỗi action item có các key: action_id, description, owner, deadline, priority, duration_minutes, evidence_ids, status.\n"
+        "Giữ output ngắn gọn: summary tối đa 4 câu, decisions tối đa 5 mục, action_items tối đa 5 mục, unresolved_questions tối đa 5 mục."
+    )
+    response = await get_llm().ainvoke(prompt)
+    payload = _extract_json_object(response.content)
+    payload = _normalize_extraction_payload(payload)
+    return MeetingExtraction.model_validate(payload)
+
+
+def _merge_results(results: List[MeetingExtraction]) -> MeetingExtraction:
+    """Reduce step: Hợp nhất kết quả từ các batches."""
+    summaries = [r.summary for r in results if r.summary]
+    participants = list(dict.fromkeys(p for r in results for p in r.participants if p))
+    organizations = list(dict.fromkeys(o for r in results for o in r.organizations if o))
+    decisions = list(dict.fromkeys(d for r in results for d in r.decisions if d))
+    unresolved = list(dict.fromkeys(u for r in results for u in r.unresolved_questions if u))
+
+    action_items: list[ActionItem] = []
+    for r in results:
+        for item in r.action_items:
+            item.action_id = f"ACTION_{len(action_items) + 1:03d}"
+            action_items.append(item)
+
+    return MeetingExtraction(
+        summary="\n\n".join(summaries),
+        participants=participants,
+        organizations=organizations,
+        decisions=decisions,
+        action_items=action_items,
+        unresolved_questions=unresolved,
     )
 
-    structured_llm = get_llm().with_structured_output(MeetingExtraction)
-    result = structured_llm.invoke(prompt)
+async def extract_meeting_information_async(state: RunState, batch_size: int = 2) -> MeetingExtraction:
+    """Hàm chính: Thực thi Map-Reduce bất đồng bộ song song."""
+    all_evidence = state.all_evidence
+    if not all_evidence:
+        return MeetingExtraction()
 
-    for index, item in enumerate(result.action_items, start=1):
-        if not item.action_id:
-            item.action_id = f"ACTION_{index:03d}"
+    batches = [all_evidence[i : i + batch_size] for i in range(0, len(all_evidence), batch_size)]
+    results = []
+    for batch in batches:
+        result = await _extract_batch(batch, state.user_request, state.script_type.value)
+        results.append(result)
+    return _merge_results(results)
 
-    return result
+
+def extract_meeting_information(state: RunState, batch_size: int = 2) -> MeetingExtraction:
+    """Wrapper đồng bộ cho extract_meeting_information_async."""
+    return asyncio.run(extract_meeting_information_async(state, batch_size=batch_size))
 
 
 if __name__ == "__main__":
+    import json
+    from app.core.constants import ScriptType
 
-    from app.core.constants import ScriptType, SourceType
-    from app.schemas.evidence import EvidenceRef
+    with open(r"outputs\step\script_parsed.json", "r", encoding="utf-8") as f:
+        raw_data = json.load(f)
 
-    demo = RunState(
-        session_id="complex_demo_001",
-        user_request="Trích xuất tóm tắt, người tham gia, các công ty liên quan, quyết định, việc cần làm và câu hỏi chưa giải quyết.",
+    demo_state = RunState(
+        session_id="demo_001",
+        user_request="Trích xuất tóm tắt và công việc từ văn bản.",
         script_type=ScriptType.ACTUAL_TRANSCRIPT,
+        script_segments=[EvidenceRef(**item) for item in raw_data],
     )
 
-    # 1. Bằng chứng từ file kịch bản (Script)
-    demo.script_segments = [
-        EvidenceRef(
-            evidence_id="SCRIPT_001",
-            source_type=SourceType.MEETING_SCRIPT,
-            source_id="bien_ban_hop.docx",
-            speaker="Nam (PM)",
-            content="Cuộc họp bắt đầu lúc 9:00 với sự tham gia của Nam (PM), Minh (Sales), Lan (Tech Lead) đại diện công ty và anh Hoàng đại diện ABC Corporation.",
-        ),
-        EvidenceRef(
-            evidence_id="SCRIPT_002",
-            source_type=SourceType.MEETING_SCRIPT,
-            source_id="bien_ban_hop.docx",
-            speaker="Minh (Sales)",
-            content="Minh sẽ chịu trách nhiệm hoàn thiện file báo giá chi tiết và gửi cho anh Hoàng trước 17:00 thứ Sáu tới (2026-08-15).",
-        ),
-    ]
-
-    # 2. Bằng chứng từ file ghi âm cuộc họp (Audio STT)
-    demo.transcript = [
-        EvidenceRef(
-            evidence_id="AUDIO_001",
-            source_type=SourceType.AUDIO,
-            source_id="cuoc_hop_p2.mp3",
-            speaker="Lan (Tech Lead)",
-            content="Phía kỹ thuật chốt dùng thư viện ReportLab để xuất file báo cáo PDF A4. Lan sẽ hoàn thành bản POC trước thứ Tư.",
-            metadata={"start": 120.5, "end": 145.0},
-        ),
-        EvidenceRef(
-            evidence_id="AUDIO_002",
-            source_type=SourceType.AUDIO,
-            source_id="cuoc_hop_p2.mp3",
-            speaker="Hoàng (ABC)",
-            content="Thắc mắc: Chiết khấu 5% cho hợp đồng năm có áp dụng đồng thời với ưu đãi hỗ trợ kỹ thuật không?",
-            metadata={"start": 200.0, "end": 215.0},
-        ),
-    ]
-
-    # 3. Bằng chứng từ hình ảnh bảng vẽ / slide họp (OCR)
-    demo.ocr_blocks = [
-        EvidenceRef(
-            evidence_id="IMAGE_001",
-            source_type=SourceType.IMAGE,
-            source_id="slide_ket_luan.png",
-            speaker="Slide",
-            content="Quyết định: Hai bên thống nhất ký MOU hợp tác giai đoạn 1 trong tháng 8.",
-        ),
-    ]
-
-    result = extract_meeting_information(demo)
+    result = extract_meeting_information(demo_state)
     print(result.model_dump_json(indent=2))
+
+    with open("./outputs/step/extractor.json", "w", encoding="utf-8") as f:
+        json.dump(result.model_dump(), f, ensure_ascii=False, indent=2)
+        
+    print(f"Đã lưu {len(result.action_items)} action items vào extractor.json")

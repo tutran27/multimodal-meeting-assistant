@@ -1,0 +1,214 @@
+{
+  "script_type": "meeting_minutes",
+  "total_items": 16,
+  "evidence": [
+    {
+      "evidence_id": "SCRIPT_001",
+      "source_type": "meeting_script",
+      "source_id": "project.docx",
+      "content": "ĐỀ CƯƠNG CHI TIẾT PROJECT\nTên đề tài: Phát triển phần mềm có tính năng phát hiện, theo dõi và phân tích mật độ phương tiện từ dữ liệu video UAV bằng Deep Learning phục vụ giám sát và hỗ trợ điều khiển tín hiệu giao thông thích ứng.\n1. Mục tiêu nghiên cứu\n1.1. Mục tiêu tổng quát\nXây dựng một hệ thống hoàn chỉnh có khả năng phát hiện, theo dõi quỹ đạo, đếm số lượng phương tiện từ video UAV để phân tích mật độ giao thông. Từ đó, tích hợp LLM nhằm sinh ra các mô tả trạng thái giao thông và đưa ra cảnh báo/khuyến nghị điều khiển tín hiệu đèn giao thông thích ứng. Hệ thống được đánh giá toàn diện trên các tập dữ liệu UAV thực tế như VisDrone và các tập dữ liệu có nhãn theo dõi (tracking ground-truth).\n1.2. Mục tiêu cụ thể\nXây dựng mô hình phát hiện 4 loại phương tiện chính (Car, Motorcycle, Bus, Truck) từ video UAV. Đếm chính xác số lượng phương tiện đi qua các vạch ảo (virtual line) hoặc vùng quan tâm (ROI) trong một khoảng thời gian xác định.",
+      "confidence": 1.0,
+      "speaker": null,
+      "section": null,
+      "page_number": null,
+      "metadata": {
+        "script_type": "meeting_minutes"
+      }
+    },
+    {
+      "evidence_id": "SCRIPT_002",
+      "source_type": "meeting_script",
+      "source_id": "project.docx",
+      "content": "Ứng dụng thuật toán theo dõi (ByteTrack/BoT-SORT) để duy trì ID ổn định, xác định quỹ đạo di chuyển của phương tiện, xử lý các lỗi phát hiện (như che khuất) nhằm tránh tình trạng đếm trùng lặp.\nĐề xuất công thức tính toán và phân tích các chỉ số: số lượng, lưu lượng, mật độ, mức độ tập trung. Đưa ra cảnh báo tự động khi mật độ vượt ngưỡng, phương tiện tăng đột biến hoặc xuất hiện tập trung bất thường.\nSử dụng LLM để phân tích dữ liệu đầu vào (mật độ, hướng di chuyển, thời gian chờ, mức độ ùn tắc) và tự động sinh ra một Traffic Control Profile có cấu trúc, làm cơ sở khuyến nghị thay đổi chu kỳ tín hiệu đèn giao thông.\nDùng tập dữ liệu VisDrone để đánh giá Detection, sử dụng thêm các bộ dữ liệu có sẵn ground-truth trajectory (như UAVDT hoặc VisDrone-MOT) để đánh giá toàn diện các module Tracking và Counting.\n2. Đối tượng và phạm vi nghiên cứu\n2.1. Đối tượng nghiên cứu\nCác lớp đối tượng cần phát hiện: Ô tô con (Car), Xe máy (Motorcycle), Xe tải (Truck), Xe buýt (Bus).",
+      "confidence": 1.0,
+      "speaker": null,
+      "section": null,
+      "page_number": null,
+      "metadata": {
+        "script_type": "meeting_minutes"
+      }
+    },
+    {
+      "evidence_id": "SCRIPT_003",
+      "source_type": "meeting_script",
+      "source_id": "project.docx",
+      "content": "2. Đối tượng và phạm vi nghiên cứu\n2.1. Đối tượng nghiên cứu\nCác lớp đối tượng cần phát hiện: Ô tô con (Car), Xe máy (Motorcycle), Xe tải (Truck), Xe buýt (Bus).\nCác chỉ số giao thông: Lưu lượng, mật độ, quỹ đạo di chuyển và thời gian chờ của phương tiện.\n2.2. Phạm vi nghiên cứu\nDữ liệu đầu vào: video/ảnh thu từ UAV, sử dụng bộ dữ liệu chuẩn VisDrone2019 (có thể mở rộng thêm UAVDT nếu điều kiện thời gian và tài nguyên cho phép).\nBài toán Object Detection: sử dụng kiến trúc YOLO11, không nghiên cứu đề xuất kiến trúc mạng nơ-ron mới.\nBài toán Object Tracking: sử dụng thuật toán ByteTrack, có thể so sánh đối chứng với BoT-SORT (tùy theo góp ý của giáo viên hướng dẫn).\nPhạm vi triển khai: xây dựng hệ thống dưới dạng ứng dụng demo (dashboard) chạy trên máy tính cá nhân/máy chủ, chưa triển khai trên phần cứng nhúng gắn trực tiếp trên UAV.",
+      "confidence": 1.0,
+      "speaker": null,
+      "section": null,
+      "page_number": null,
+      "metadata": {
+        "script_type": "meeting_minutes"
+      }
+    },
+    {
+      "evidence_id": "SCRIPT_004",
+      "source_type": "meeting_script",
+      "source_id": "project.docx",
+      "content": "Phạm vi triển khai: xây dựng hệ thống dưới dạng ứng dụng demo (dashboard) chạy trên máy tính cá nhân/máy chủ, chưa triển khai trên phần cứng nhúng gắn trực tiếp trên UAV.\nĐề tài tập trung xây dựng, tích hợp và đánh giá hiệu quả hệ thống dựa trên các mô hình/thuật toán đã có, không đặt trọng tâm vào việc phát triển thuật toán Deep Learning hoàn toàn mới.\n3. Tổng quan tình hình nghiên cứu\nPhần này trình bày tổng quan các hướng nghiên cứu liên quan làm cơ sở lý luận và kỹ thuật cho đề tài, đồng thời chỉ ra khoảng trống nghiên cứu mà đề tài hướng tới giải quyết.\n3.1. Phát hiện đối tượng",
+      "confidence": 1.0,
+      "speaker": null,
+      "section": null,
+      "page_number": null,
+      "metadata": {
+        "script_type": "meeting_minutes"
+      }
+    },
+    {
+      "evidence_id": "SCRIPT_005",
+      "source_type": "meeting_script",
+      "source_id": "project.docx",
+      "content": "Phần này trình bày tổng quan các hướng nghiên cứu liên quan làm cơ sở lý luận và kỹ thuật cho đề tài, đồng thời chỉ ra khoảng trống nghiên cứu mà đề tài hướng tới giải quyết.\n3.1. Phát hiện đối tượng\nĐể giải quyết bài toán phát hiện phương tiện, đề tài sử dụng kiến trúc mạng nơ-ron YOLO11 nhằm nhận diện chính xác 4 lớp đối tượng giao thông chính bao gồm ô tô con (Car), xe máy (Motorcycle), xe buýt (Bus) và xe tải (Truck). Việc áp dụng YOLO11 giúp hệ thống có khả năng trích xuất đặc trưng mạnh mẽ, qua đó xử lý hiệu quả các đặc thù và thách thức của dữ liệu hình ảnh thu thập từ UAV. Cụ thể, mô hình sẽ được tối ưu để khắc phục vấn đề kích thước vật thể rất nhỏ do góc máy quay từ trên cao, đồng thời đảm bảo độ chính xác ngay cả khi mật độ phương tiện xuất hiện dày đặc và đan xen nhau trong cùng một khung hình.\n3.2. Theo dõi và xác định quỹ đạo",
+      "confidence": 1.0,
+      "speaker": null,
+      "section": null,
+      "page_number": null,
+      "metadata": {
+        "script_type": "meeting_minutes"
+      }
+    },
+    {
+      "evidence_id": "SCRIPT_006",
+      "source_type": "meeting_script",
+      "source_id": "project.docx",
+      "content": "3.2. Theo dõi và xác định quỹ đạo\nSau khi các phương tiện được định vị không gian trên từng khung hình, hệ thống sẽ ứng dụng các thuật toán theo dõi đa đối tượng tiên tiến như ByteTrack hoặc BoT-SORT để tiến hành liên kết các bounding box xuyên suốt video. Mục đích là duy trì một ID duy nhất cho mỗi phương tiện, giúp xử lý hiệu quả các lỗi mất dấu do che khuất và loại bỏ tình trạng đếm trùng lặp. Thông qua việc theo dõi ID liên tục, hệ thống có thể trích xuất chính xác quỹ đạo di chuyển của từng phương tiện. Đây là cơ sở để hệ thống nhận biết hướng di chuyển, phục vụ trực tiếp cho bài toán đếm phương tiện theo từng luồng tuyến giao thông.\n3.3. Đếm và phân tích mật độ",
+      "confidence": 1.0,
+      "speaker": null,
+      "section": null,
+      "page_number": null,
+      "metadata": {
+        "script_type": "meeting_minutes"
+      }
+    },
+    {
+      "evidence_id": "SCRIPT_007",
+      "source_type": "meeting_script",
+      "source_id": "project.docx",
+      "content": "3.3. Đếm và phân tích mật độ\nDựa trên thông tin quỹ đạo và hướng di chuyển đã trích xuất, hệ thống thực hiện đếm số lượng phương tiện đi qua các vạch ảo (virtual line) hoặc vùng quan tâm (ROI) được thiết lập sẵn trong một khoảng thời gian xác định. Số liệu đếm sau đó được sử dụng để phân tích mật độ giao thông tại khu vực giám sát. Mật độ giao thông được ước tính thông qua tỷ lệ giữa tổng số phương tiện hiện diện và diện tích vùng ROI trên không gian thực địa, hoặc được tính toán gián tiếp thông qua việc xác định chiều dài hàng chờ của dòng xe tại các nút giao. Quá trình phân tích này giúp hệ thống đánh giá chính xác mức độ biến động của lưu lượng phương tiện, làm cơ sở dữ liệu quan trọng để xác định mức độ ùn tắc tại thời điểm quan sát.\n3.4 Cảnh báo và tích hợp LLM tạo Traffic Control Profile",
+      "confidence": 1.0,
+      "speaker": null,
+      "section": null,
+      "page_number": null,
+      "metadata": {
+        "script_type": "meeting_minutes"
+      }
+    },
+    {
+      "evidence_id": "SCRIPT_008",
+      "source_type": "meeting_script",
+      "source_id": "project.docx",
+      "content": "3.4 Cảnh báo và tích hợp LLM tạo Traffic Control Profile\nKhi kết quả phân tích chỉ ra rằng mật độ phương tiện vượt qua các ngưỡng cấu hình an toàn, hoặc phát hiện tình trạng lưu lượng tăng đột biến và ùn tắc kéo dài tại một hướng di chuyển, hệ thống sẽ tự động kích hoạt cơ chế cảnh báo. Để nâng cao tính thông minh và khả năng hỗ trợ ra quyết định, hệ thống tích hợp thêm LLM để xử lý các dữ liệu định lượng thu thập được. Cụ thể, các thông số về mật độ, số lượng phương tiện chờ, hướng di chuyển và mức độ ùn tắc sẽ được tổng hợp làm đầu vào (prompt) cho LLM. Thay vì trực tiếp can thiệp vào phần cứng, LLM sẽ tự động phân tích và sinh ra một Traffic Control Profile có cấu trúc logic. Hồ sơ này đóng vai trò như một bản khuyến nghị chi tiết, đề xuất việc tăng giảm thời gian đèn xanh cho từng hướng và đưa ra chu kỳ đèn tín hiệu tối ưu, cung cấp thông tin hữu ích cho module điều khiển hoặc người vận hành hệ thống đèn giao thông thích ứng.\n3.5 Phương pháp đánh giá",
+      "confidence": 1.0,
+      "speaker": null,
+      "section": null,
+      "page_number": null,
+      "metadata": {
+        "script_type": "meeting_minutes"
+      }
+    },
+    {
+      "evidence_id": "SCRIPT_009",
+      "source_type": "meeting_script",
+      "source_id": "project.docx",
+      "content": "3.5 Phương pháp đánh giá\nHệ thống sẽ được đánh giá toàn diện trên từng module để đảm bảo tính thực tiễn, sử dụng các độ đo chuẩn:\nDetection: Đánh giá trên VisDrone bằng các chỉ số: Precision, Recall, mAP@0.5, mAP@0.5:0.95.\nTracking: Đánh giá trên dataset có ground-truth ID bằng các chỉ số: IDF1, MOTA, HOTA.\nCounting: MAE, Accuracy.\nHiệu năng hệ thống: FPS và Latency.\n4. Cơ sở lý thuyết\n4.1. Mô hình YOLO11\nYOLO11 là phiên bản cải tiến trong họ mô hình YOLO, hoạt động theo cơ chế one-stage detector: dự đoán đồng thời vị trí và lớp của đối tượng chỉ qua một lượt truyền xuôi (forward pass) của mạng nơ-ron. Kiến trúc gồm ba thành phần chính: (1) Backbone trích xuất đặc trưng đa tầng từ ảnh đầu vào; (2) Neck kết hợp đặc trưng ở nhiều tỉ lệ (feature pyramid) để cải thiện khả năng phát hiện vật thể nhỏ; (3) Head dự đoán bounding box, độ tin cậy và lớp đối tượng theo cơ chế anchor-free, giúp giảm số lượng siêu tham số cần tinh chỉnh và cải thiện tốc độ suy luận.\n4.2. Thuật toán ByteTrack",
+      "confidence": 1.0,
+      "speaker": null,
+      "section": null,
+      "page_number": null,
+      "metadata": {
+        "script_type": "meeting_minutes"
+      }
+    },
+    {
+      "evidence_id": "SCRIPT_010",
+      "source_type": "meeting_script",
+      "source_id": "project.docx",
+      "content": "4.2. Thuật toán ByteTrack\nByteTrack thuộc nhóm thuật toán tracking-by-detection, sử dụng bộ lọc Kalman để dự đoán vị trí đối tượng ở khung hình tiếp theo và thuật toán Hungarian để liên kết (association) các bounding box giữa các khung hình liên tiếp. Điểm khác biệt của ByteTrack so với các phương pháp trước đó là tận dụng cả các bounding box có độ tin cậy thấp (thay vì loại bỏ ngay) trong bước liên kết thứ hai, giúp khôi phục các đối tượng bị che khuất tạm thời, từ đó giảm đáng kể tình trạng mất dấu và phân mảnh ID (ID switch).\n4.3. Kỹ thuật đếm đối tượng theo vùng/đường ảo\nPhương pháp đếm phổ biến là thiết lập một đường ảo (virtual line) hoặc vùng quan tâm (Region of Interest - ROI) trên khung hình; khi tâm bounding box của một đối tượng có ID xác định băng qua đường/vùng này, hệ thống ghi nhận một lượt đếm. Việc kết hợp với ID theo dõi ổn định từ ByteTrack giúp mỗi phương tiện chỉ được đếm đúng một lần, hạn chế đếm trùng.\n4.4. Phân tích mật độ giao thông",
+      "confidence": 1.0,
+      "speaker": null,
+      "section": null,
+      "page_number": null,
+      "metadata": {
+        "script_type": "meeting_minutes"
+      }
+    },
+    {
+      "evidence_id": "SCRIPT_011",
+      "source_type": "meeting_script",
+      "source_id": "project.docx",
+      "content": "4.4. Phân tích mật độ giao thông\nMật độ giao thông có thể được ước lượng dựa trên số lượng phương tiện hiện diện trong một vùng quan sát tại một thời điểm hoặc theo cửa sổ thời gian (time window), sau đó phân loại thành các mức (thấp, trung bình, cao) dựa trên ngưỡng được thiết lập theo kinh nghiệm hoặc theo khảo sát thực tế tại khu vực nghiên cứu.\n4.5. Mô hình ngôn ngữ lớn và mô hình ngôn ngữ - thị giác (LLM/VLM)",
+      "confidence": 1.0,
+      "speaker": null,
+      "section": null,
+      "page_number": null,
+      "metadata": {
+        "script_type": "meeting_minutes"
+      }
+    },
+    {
+      "evidence_id": "SCRIPT_012",
+      "source_type": "meeting_script",
+      "source_id": "project.docx",
+      "content": "4.5. Mô hình ngôn ngữ lớn và mô hình ngôn ngữ - thị giác (LLM/VLM)\nLLM (Large Language Model) là các mô hình học sâu được huấn luyện trên khối lượng lớn dữ liệu văn bản, có khả năng sinh văn bản tự nhiên mạch lạc từ dữ liệu đầu vào có cấu trúc. VLM (Vision-Language Model) mở rộng khả năng này bằng cách kết hợp thông tin thị giác. Trong phạm vi đề tài, LLM/VLM được sử dụng ở vai trò chuyển đổi dữ liệu thống kê (số lượng, mật độ, cảnh báo) thành mô tả ngôn ngữ tự nhiên thông qua kỹ thuật prompt engineering, có thể triển khai theo hướng gọi API mô hình có sẵn hoặc sử dụng mô hình mã nguồn mở chạy cục bộ, tùy theo điều kiện tài nguyên và góp ý của giáo viên hướng dẫn.\n5. Công nghệ và công cụ sử dụng\nYOLO11 (Ultralytics): Mô hình phát hiện đối tượng chính, được lựa chọn vì tốc độ suy luận nhanh, độ chính xác cao và phù hợp xử lý video thời gian gần thực.\nByteTrack: Thuật toán theo dõi đa đối tượng, duy trì ID tốt, hạn chế mất dấu và đếm trùng.",
+      "confidence": 1.0,
+      "speaker": null,
+      "section": null,
+      "page_number": null,
+      "metadata": {
+        "script_type": "meeting_minutes"
+      }
+    },
+    {
+      "evidence_id": "SCRIPT_013",
+      "source_type": "meeting_script",
+      "source_id": "project.docx",
+      "content": "ByteTrack: Thuật toán theo dõi đa đối tượng, duy trì ID tốt, hạn chế mất dấu và đếm trùng.\nVisDrone2019: Bộ dữ liệu chuẩn, được xây dựng riêng cho bài toán thị giác máy tính trên ảnh/video UAV.\nPython: Ngôn ngữ lập trình chính để phát triển toàn bộ hệ thống.\nPyTorch: Framework Deep Learning nền tảng để huấn luyện và triển khai mô hình.\nOpenCV: Thư viện xử lý video, đọc/ghi khung hình, vẽ bounding box và trực quan hóa.\nUltralytics library: Hỗ trợ huấn luyện, đánh giá và suy luận cho YOLO11.\nLLM/VLM API hoặc mô hình mã nguồn mở: Sinh mô tả tự động bằng ngôn ngữ tự nhiên từ dữ liệu thống kê.\nStreamlit / Flask (dự kiến): Xây dựng dashboard trực quan hiển thị kết quả theo thời gian thực.\n6. Kiến trúc hệ thống\nHệ thống được thiết kế theo kiến trúc pipeline tuần tự, trong đó dữ liệu đi qua lần lượt các thành phần xử lý sau:\nVideo UAV\n↓\nTiền xử lý dữ liệu\n↓\nYOLO11 (Object Detection)\n↓\nByteTrack (Object Tracking)\n↓\nVehicle Counting\n↓\nTraffic Density Analysis\n↓\nAlert Engine\n↓",
+      "confidence": 1.0,
+      "speaker": null,
+      "section": null,
+      "page_number": null,
+      "metadata": {
+        "script_type": "meeting_minutes"
+      }
+    },
+    {
+      "evidence_id": "SCRIPT_014",
+      "source_type": "meeting_script",
+      "source_id": "project.docx",
+      "content": "Video UAV\n↓\nTiền xử lý dữ liệu\n↓\nYOLO11 (Object Detection)\n↓\nByteTrack (Object Tracking)\n↓\nVehicle Counting\n↓\nTraffic Density Analysis\n↓\nAlert Engine\n↓\nLLM/VLM (sinh mô tả)\n↓\nDashboard và JSON Output\nCác gợi ý thêm\nVí dụ, khi đã chốt hướng “phân tích mật độ”, một số gợi ý như sau:\n1.\tPhát hiện cái gì? Car, motorcycle, bus, truck.\n2.\tTheo dõi để làm gì? Duy trì ID, làm sao tránh đếm trùng, bài toán xác định quỹ đạo phương tiện.\n3.\tMục tiêu đếm để làm gì? Xác định số phương tiện đi qua ROI/virtual line trong khoảng thời gian xác định.\n4.\tPhân tích cái gì? Số lượng, lưu lượng, mật độ, mức độ tập trung và biến động số phương tiện. Xác định mật độ như thế nào? Đề xuất công thức tính.\n5.\tCảnh báo khi nào? Ví dụ mật độ vượt ngưỡng, số phương tiện tăng đột biến hoặc xuất hiện tập trung phương tiện bất thường. Hoặc dựa vào mật độ khuyến nghị thay đổi chu kỳ tín hiệu đèn giao thông. Có thể ứng dụng LLM tạo profile để điều khiển đèn.\n6.\tPhương pháp đánh giá bằng gì?",
+      "confidence": 1.0,
+      "speaker": null,
+      "section": null,
+      "page_number": null,
+      "metadata": {
+        "script_type": "meeting_minutes"
+      }
+    },
+    {
+      "evidence_id": "SCRIPT_015",
+      "source_type": "meeting_script",
+      "source_id": "project.docx",
+      "content": "6.\tPhương pháp đánh giá bằng gì?\nDetection → Precision, Recall, mAP@0.5, mAP@0.5:0.95;\nTracking → IDF1/MOTA/HOTA;\nCounting → MAE/Accuracy;\nHệ thống → FPS/latency.\n7. Nếu muốn tích hợp LLM thì tiếp cận là: Xây dựng một traffic control profile từ dữ liệu đầu vào như số lượng phương tiện, mật độ, hướng di chuyển, thời gian chờ và mức độ ùn tắc. LLM không trực tiếp điều khiển đèn mà sinh ra profile/khuyến nghị có cấu trúc để module điều khiển sử dụng, ví dụ:\nTraffic Profile\n- Hướng Bắc–Nam: mật độ cao\n- Hướng Đông–Tây: mật độ thấp\n- Số phương tiện chờ hướng Bắc: 42\n- Số phương tiện chờ hướng Đông: 15\n- Mức ùn tắc: Cao\n- Khuyến nghị:\n+ Tăng thời gian đèn xanh hướng Bắc–Nam\n+ Giảm thời gian đèn xanh hướng Đông–Tây\n+ Chu kỳ đề xuất: 90 s",
+      "confidence": 1.0,
+      "speaker": null,
+      "section": null,
+      "page_number": null,
+      "metadata": {
+        "script_type": "meeting_minutes"
+      }
+    },
+    {
+      "evidence_id": "SCRIPT_016",
+      "source_type": "meeting_script",
+      "source_id": "project.docx",
+      "content": "- Số phương tiện chờ hướng Đông: 15\n- Mức ùn tắc: Cao\n- Khuyến nghị:\n+ Tăng thời gian đèn xanh hướng Bắc–Nam\n+ Giảm thời gian đèn xanh hướng Đông–Tây\n+ Chu kỳ đề xuất: 90 s\n8. VisDrone có thể đánh giá Detection tốt, nhưng chưa đủ cho toàn hệ thống.  VisDrone làm dataset chính để huấn luyện/fine-tune YOLO, nhưng bổ sung dữ liệu cho Tracking, Counting và bài toán điều khiển đèn. Tracking: bổ sung video có Track ID. Do đó chọn subset/dataset có ground-truth trajectory/track ID để kiểm chứng ByteTrack/BoT-SORT.\n9. Cần làm rõ thêm kết quả đạt được là gì? Gợi ý.\n- 01 bộ dữ liệu phương tiện từ góc nhìn UAV đã được chuẩn hóa.\n- 01 mô hình Deep Learning phát hiện phương tiện đã được huấn luyện/fine-tune, và 01 module Multi-Object Tracking để theo dõi và gán ID phương tiện.\n- 01 phần mềm/demo phát hiện và theo dõi phương tiện từ video UAV.\n- Báo cáo đánh giá định lượng về độ chính xác và tốc độ xử lý.\n- Báo cáo đồ án tốt nghiệp, mã nguồn và hướng dẫn sử dụng.",
+      "confidence": 1.0,
+      "speaker": null,
+      "section": null,
+      "page_number": null,
+      "metadata": {
+        "script_type": "meeting_minutes"
+      }
+    }
+  ]
+}

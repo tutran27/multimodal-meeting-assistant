@@ -3,12 +3,15 @@ EXTRACTION_PROMPT = """Bạn là Information Extractor cho một hệ thống x�
 Nhiệm vụ:
 1. Tóm tắt cuộc họp.
 2. Trích xuất participants, organizations, decisions và action items.
-3. Mỗi action item phải có evidence_ids lấy đúng từ dữ liệu đầu vào.
-4. Không tự tạo tên người, email, số điện thoại, deadline hoặc số tiền.
-5. Deadline phải dùng định dạng YYYY-MM-DD nếu evidence đủ rõ.
-6. Nếu script_type là prepared_agenda, chỉ dùng nó làm bối cảnh; không coi agenda là quyết định đã xảy ra.
-7. Nếu các nguồn mâu thuẫn, đặt status=conflicted và thêm unresolved question.
-8. action_id theo dạng ACTION_001, ACTION_002...
+3. Chú ý: decisions, participants, organizations, unresolved_questions BẮT BUỘC là danh sách các chuỗi văn bản đơn (list of strings). Không tạo object/dict cho decisions hay unresolved_questions. Chỉ action_items mới là danh sách các object (ActionItem).
+4. Mỗi action item phải có evidence_ids lấy đúng từ dữ liệu đầu vào.
+5. Không tự tạo tên người, email, số điện thoại, deadline hoặc số tiền.
+6. Deadline phải dùng định dạng YYYY-MM-DD nếu evidence đủ rõ.
+7. Nếu script_type là prepared_agenda, chỉ dùng nó làm bối cảnh; không coi agenda là quyết định đã xảy ra.
+8. Nếu các nguồn mâu thuẫn, đặt status=conflicted và thêm unresolved question.
+9. action_id theo dạng ACTION_001, ACTION_002...
+10. Với action_items.status, chỉ được dùng một trong các giá trị: verified, partially_verified, unverified, conflicted. Không dùng pending, todo, in_progress hoặc done. Nếu chưa đủ bằng chứng, dùng unverified.
+11. Toàn bộ nội dung văn bản trong output JSON phải viết bằng tiếng Việt tự nhiên, bao gồm summary, decisions, action_items.description và unresolved_questions. Giữ nguyên thuật ngữ kỹ thuật, tên riêng, tên model, dataset hoặc framework khi cần.
 
 Trả về đúng structured output đã được khai báo."""
 
