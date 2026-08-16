@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     openrouter_api_key: str | None = None
     openrouter_llm_model: str = "qwen/qwen-2.5-72b-instruct"
     
+    # Hugging Face
+    hf_token: str | None = Field(default=None, alias="HF_TOKEN")
+    
     llm_temperature: float = 0.0
     llm_timeout_seconds: int = 60
     llm_max_retries: int = 2

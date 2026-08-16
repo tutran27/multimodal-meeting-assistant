@@ -1,3 +1,13 @@
+"""
+Module: reflector.py
+Vai trò: Reflection Agent chịu trách nhiệm đánh giá, phản tư và kiểm tra chất lượng kết quả thực thi so với yêu cầu ban đầu.
+
+Mô tả chi tiết:
+- Tổng hợp toàn bộ ngữ cảnh thực thi: yêu cầu người dùng, thông tin trích xuất, kế hoạch thực thi, kết quả trả về từ các công cụ (tool results), đường dẫn báo cáo PDF và ID bản thảo email.
+- Sử dụng mô hình LLM với đầu ra có cấu trúc (`ReflectionResult`) để đánh giá mức độ hoàn thành nhiệm vụ (`completed`), độ tin cậy (`confidence`), và phát hiện các điểm còn thiếu sót hoặc sai lệch.
+- Đề xuất các điều chỉnh hoặc kích hoạt luồng lập lại kế hoạch (`replan`) nếu kết quả chưa đạt yêu cầu.
+"""
+
 from app.core.prompts import REFLECTION_PROMPT
 from app.schemas.state import RunState
 from app.schemas.validation import ReflectionResult

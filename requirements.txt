@@ -11,3 +11,4 @@ langchain_groq
 torchvision
 huggingface_hub
 sentence-transformers
+tavily

@@ -1,3 +1,14 @@
+"""
+Module: planner.py
+Vai trò: Planning Agent chịu trách nhiệm lập kế hoạch thực thi các bước hành động (ExecutionPlan) dựa trên yêu cầu người dùng và thông tin đã trích xuất.
+
+Mô tả chi tiết:
+- Tổng hợp ngữ cảnh từ trạng thái thực thi hiện tại: yêu cầu của người dùng (`user_request`), tóm tắt cuộc họp (`summary`), các đối tác/tổ chức liên quan (`organizations`), danh sách hành động cần làm (`action_items`), thời gian hiện tại và múi giờ hệ thống.
+- Sử dụng LLM và Prompt lập kế hoạch (`PLANNER_PROMPT`) để phân tích và sinh ra danh sách các bước thực thi (`ExecutionStep`).
+- Mỗi bước thực thi xác định rõ: mục tiêu (`objective`), công cụ cần gọi (`tool_name`), tham số truyền vào (`arguments`), và danh sách các bước phụ thuộc (`depends_on`).
+- Cung cấp khối `__main__` để kiểm thử tạo và xuất kế hoạch thực thi ra tệp JSON cục bộ.
+"""
+
 import json
 import re
 from datetime import datetime

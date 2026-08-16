@@ -1,3 +1,13 @@
+"""
+Module: extractor.py
+Vai trò: Extraction Agent chịu trách nhiệm trích xuất thông tin có cấu trúc từ dữ liệu đa phương thức (Audio, OCR, Meeting Script).
+
+Mô tả chi tiết:
+- Sử dụng mô hình LLM để phân tích và trích xuất các thông tin cốt lõi từ bằng chứng (evidence): tóm tắt nội dung (summary), người tham gia (participants), tổ chức liên quan (organizations), quyết định đưa ra (decisions), các đầu việc cần làm (action items kèm người phụ trách, hạn chót, mức độ ưu tiên), và câu hỏi chưa giải quyết (unresolved questions).
+- Hỗ trợ cơ chế Map-Reduce khi khối lượng bằng chứng lớn: chia nhỏ evidence thành các batch nhỏ hơn, trích xuất song song qua `asyncio.gather`, sau đó tổng hợp thành một bản trích xuất thống nhất.
+- Chuẩn hóa và làm sạch dữ liệu đầu ra từ LLM (đồng bộ `owner`/`assigned_to`, gán trạng thái kiểm chứng mặc định).
+"""
+
 import asyncio
 import json
 import re

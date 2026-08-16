@@ -1,9 +1,13 @@
 from sentence_transformers import CrossEncoder
+from app.core.config import settings
 from app.schemas.evidence import EvidenceRef
 from app.core.constants import SourceType
 
-model = CrossEncoder("BAAI/bge-reranker-v2-m3")
-
+model = CrossEncoder(
+    "BAAI/bge-reranker-v2-m3",
+    automodel_args={"token": settings.hf_token} if settings.hf_token else None,
+)
+  
 def align_sources_cross_encoder(
     evidence: list[EvidenceRef],
     threshold: float = 0.7,
