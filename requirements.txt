@@ -12,3 +12,5 @@ torchvision
 huggingface_hub
 sentence-transformers
 tavily
+streamlit
+reportlab

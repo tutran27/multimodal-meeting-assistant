@@ -1,3 +1,13 @@
+"""
+Module: source_aligner.py
+Vai trò: Evidence Source Aligner (Gom cụm và căn chỉnh bằng chứng đa phương thức) trong tầng Điều phối.
+
+Mô tả chi tiết:
+- Sử dụng mô hình Cross-Encoder (`BAAI/bge-reranker-v2-m3`) để đo độ tương đồng ngữ nghĩa giữa các mẩu bằng chứng (EvidenceRef) từ Audio, OCR và Meeting Script.
+- Gom các bằng chứng độc lập cùng nói về một nội dung/công việc vào chung một nhóm (`group_id`).
+- Tạo cơ sở để liên kết `evidence_ids` vào `ActionItem`, giúp truy vết nguồn gốc và chống bịa đặt (hallucination).
+"""
+
 from sentence_transformers import CrossEncoder
 from app.core.config import settings
 from app.schemas.evidence import EvidenceRef
@@ -12,6 +22,7 @@ def align_sources_cross_encoder(
     evidence: list[EvidenceRef],
     threshold: float = 0.7,
 ) -> list[dict]:
+    """Gom nhóm các mẩu bằng chứng có ngữ nghĩa tương đồng bằng mô hình Cross-Encoder."""
     groups: list[dict] = []
 
     for item in evidence:

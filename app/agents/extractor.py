@@ -15,7 +15,6 @@ from typing import Any
 from typing import List
 
 from app.core.prompts import EXTRACTION_PROMPT
-from app.core.constants import VerificationStatus
 from app.schemas.evidence import EvidenceRef
 from app.schemas.extraction import ActionItem, MeetingExtraction
 from app.schemas.state import RunState
@@ -28,33 +27,6 @@ def _extract_json_object(text: str) -> dict[str, Any]:
     if not match:
         raise ValueError(f"LLM không trả về JSON object hợp lệ: {text}")
     return json.loads(match.group(0))
-
-
-def _normalize_action_item(item: dict[str, Any]) -> dict[str, Any]:
-    if "owner" not in item and "assigned_to" in item:
-        item["owner"] = item.pop("assigned_to")
-
-    status = item.get("status")
-    allowed_statuses = {status.value for status in VerificationStatus}
-    if status not in allowed_statuses:
-        item["status"] = VerificationStatus.UNVERIFIED.value
-
-    return item
-
-
-def _normalize_extraction_payload(payload: dict[str, Any]) -> dict[str, Any]:
-    payload.setdefault("summary", "")
-    payload.setdefault("participants", [])
-    payload.setdefault("organizations", [])
-    payload.setdefault("decisions", [])
-    payload.setdefault("action_items", [])
-    payload.setdefault("unresolved_questions", [])
-    payload["action_items"] = [
-        _normalize_action_item(item)
-        for item in payload["action_items"]
-        if isinstance(item, dict)
-    ]
-    return payload
 
 
 async def _extract_batch(batch: List[EvidenceRef], user_request: str, script_type: str) -> MeetingExtraction:
@@ -75,7 +47,6 @@ async def _extract_batch(batch: List[EvidenceRef], user_request: str, script_typ
     )
     response = await get_llm().ainvoke(prompt)
     payload = _extract_json_object(response.content)
-    payload = _normalize_extraction_payload(payload)
     return MeetingExtraction.model_validate(payload)
 
 

@@ -41,7 +41,13 @@ class VerificationStatus(StrEnum):
     UNVERIFIED = "unverified"
     CONFLICTED = "conflicted"
 
-ALLOWED_PLAN_TOOLS = {"calendar_freebusy", "calendar_create_event", "web_search", "pdf_generator", "email_create_draft"}
+ALLOWED_PLAN_TOOLS = {
+    "calendar_freebusy", 
+    "calendar_create_event", 
+    "web_search", 
+    "pdf_generator", 
+    "email_create_draft"
+    }
 
 EVIDENCE_PREFIXES = {
     SourceType.AUDIO: "AUDIO",
