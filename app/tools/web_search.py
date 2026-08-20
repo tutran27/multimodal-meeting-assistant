@@ -1,3 +1,13 @@
+"""
+Module: web_search.py
+Vai trò: Công cụ tìm kiếm thông tin mở rộng trên Web (Web Search Tool).
+
+Mô tả chi tiết:
+- Tích hợp công cụ tìm kiếm Tavily Search API để thu thập dữ liệu ngoài luồng từ Internet.
+- Phục vụ tra cứu thông tin nền tảng về đối tác, doanh nghiệp, thuật ngữ chuyên ngành hoặc kiểm chứng dữ kiện thực tế.
+- Trả về kết quả có cấu trúc gồm tiêu đề (`title`), liên kết (`url`) và đoạn trích tóm tắt (`snippet`).
+"""
+
 from app.core.config import settings
 from app.core.exceptions import ToolExecutionError
 

@@ -1,3 +1,14 @@
+"""
+Module: fact_validator.py
+Vai trò: Công cụ kiểm tra và đối soát tính xác thực (Fact Validation) cho dữ liệu trích xuất từ cuộc họp.
+
+Mô tả chi tiết:
+- Kiểm tra các đầu việc (`ActionItem`) có đính kèm bằng chứng (`evidence_ids`) hợp lệ hay không, tự động cập nhật trạng thái kiểm chứng (`VerificationStatus`).
+- Xác thực tính hợp lệ của hạn chót (`deadline`) và cảnh báo nếu deadline nằm trong quá khứ hoặc sai định dạng ngày tháng.
+- Chuẩn hóa thông tin người phụ trách (`owner`) với danh bạ hệ thống (`ContactRepository`) và kiểm tra định dạng email người nhận.
+- Trả về kết quả đối soát (`FactValidationResult`) gồm thực thể đã chuẩn hóa và danh sách cảnh báo/vấn đề phát hiện (`ValidationIssue`).
+"""
+
 import re
 from datetime import date
 

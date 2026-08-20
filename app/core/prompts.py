@@ -35,8 +35,13 @@ Quy tắc:
 8. Dùng ISO 8601 có timezone cho ngày giờ.
 9. Không vượt quá 8 bước.
 10. arguments phải là JSON đơn giản, không viết giải thích bên ngoài.
-11. Nội dung email nháp (email_create_draft) phải chuyên nghiệp, lịch sự, có tiêu đề, lời chào và chữ ký phù hợp.
-12. CỰC KỲ QUAN TRỌNG: Không sinh bất kỳ suy nghĩ (thinking), giải thích, hay văn bản trò chuyện nào ngoài cấu trúc JSON/Tool call của ExecutionPlan.
+11. Tham chiếu động (Dynamic Placeholder): Khi một tham số cần lấy giá trị từ trạng thái (state) hoặc kết quả của bước trước, hãy dùng cú pháp placeholder:
+    - Đường dẫn file PDF đính kèm: "{{state.report_path}}"
+    - Tóm tắt cuộc họp: "{{state.extraction.summary}}"
+    - ID phiên làm việc: "{{state.session_id}}"
+    - Kết quả của bước trước: "{{state.tool_results.<step_id>.<key>}}"
+12. Nội dung email nháp (email_create_draft) phải chuyên nghiệp, lịch sự, có tiêu đề, lời chào và chữ ký phù hợp.
+13. CỰC KỲ QUAN TRỌNG: Không sinh bất kỳ suy nghĩ (thinking), giải thích, hay văn bản trò chuyện nào ngoài cấu trúc JSON/Tool call của ExecutionPlan.
 
 Trả về ExecutionPlan đúng schema."""
 

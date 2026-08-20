@@ -1,3 +1,13 @@
+"""
+Module: gmail_draft.py
+Vai trò: Công cụ tạo bản thảo email (Gmail Draft) tích hợp dịch vụ Google Workspace.
+
+Mô tả chi tiết:
+- Kết nối tới Google Gmail API thông qua dịch vụ xác thực OAuth2 (`GoogleOAuthService`).
+- Hỗ trợ tạo email với tiêu đề, nội dung và tự động đính kèm tệp tin (ví dụ: báo cáo PDF cuộc họp) theo chuẩn MIME.
+- Tạo bản thảo an toàn ở trạng thái chưa gửi (`sent: False`), cho phép người dùng kiểm tra trước khi quyết định gửi đi.
+"""
+
 import base64
 from email.message import EmailMessage
 from mimetypes import guess_type

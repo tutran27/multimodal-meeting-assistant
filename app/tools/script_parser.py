@@ -1,3 +1,14 @@
+"""
+Module: script_parser.py
+Vai trò: Công cụ đọc, phân loại và phân tích kịch bản / tài liệu cuộc họp (Meeting Script Parser).
+
+Mô tả chi tiết:
+- Sử dụng `DocumentReader` để đọc nội dung từ nhiều định dạng file khác nhau (DOCX, PDF, TXT, MD,...).
+- Tự động phân loại tài liệu (`classify_script`) thành: Kịch bản chuẩn bị trước (Agenda), Biên bản cuộc họp (Meeting Minutes), hoặc Lời thoại ghi lại (Actual Transcript).
+- Chia nhỏ văn bản thành các đoạn hợp lý (`split_text`) bằng `RecursiveCharacterTextSplitter`.
+- Nhận diện người phát biểu (speaker) theo cú pháp hội thoại và đóng gói thành danh sách `EvidenceRef` với loại nguồn `SourceType.MEETING_SCRIPT`.
+"""
+
 import re
 from pathlib import Path
 

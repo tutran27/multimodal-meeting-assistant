@@ -1,3 +1,14 @@
+"""
+Module: image_ocr.py
+Vai trò: Công cụ nhận diện ký tự quang học (OCR) - Trích xuất văn bản từ hình ảnh tài liệu hoặc bảng trắng.
+
+Mô tả chi tiết:
+- Sử dụng mô hình PaddleOCR kết hợp trọng số từ HuggingFace Hub để nhận diện chữ viết (tiếng Việt / đa ngôn ngữ).
+- Hỗ trợ tự động xoay/căn chỉnh hướng trang tài liệu (`use_doc_orientation_classify`, `use_doc_unwarping`, `use_textline_orientation`).
+- Trích xuất từng dòng văn bản kèm tọa độ hộp bao (bounding box), điểm độ tin cậy (confidence) và số trang.
+- Đóng gói kết quả thành danh sách các mẩu bằng chứng (`EvidenceRef`) chuẩn hóa với loại nguồn `SourceType.IMAGE`.
+"""
+
 from pathlib import Path
 from huggingface_hub import snapshot_download
 from paddleocr import PaddleOCR

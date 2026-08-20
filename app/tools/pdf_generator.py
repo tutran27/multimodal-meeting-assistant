@@ -1,3 +1,17 @@
+"""
+Module: pdf_generator.py
+Vai trò: Công cụ khởi tạo báo cáo tổng hợp cuộc họp định dạng PDF (Meeting Report Generator).
+
+Mô tả chi tiết:
+- Sử dụng thư viện ReportLab để xây dựng tài liệu PDF chuyên nghiệp, hỗ trợ phông chữ Unicode (tiếng Việt).
+- Bố cục báo cáo gồm 4 phần chính:
+  1. Tóm tắt điều hành & Các quyết định chính (Executive Summary & Key Decisions).
+  2. Bảng phân công công việc (Action Items Table kèm người phụ trách, deadline, mã bằng chứng).
+  3. Kết quả từ các công cụ hỗ trợ (Gợi ý lịch rảnh Calendar, thông tin đối tác từ Web Search).
+  4. Phụ lục bằng chứng trích dẫn (Evidence Appendix).
+- Tự động tính toán mã băm SHA-256 và kích thước file sau khi tạo để phục vụ lưu trữ và toàn vẹn dữ liệu.
+"""
+
 from pathlib import Path
 
 from reportlab.lib.enums import TA_CENTER

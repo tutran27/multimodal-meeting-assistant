@@ -1,7 +1,11 @@
 """
 Module: google_calendar.py
-Vai trò: Quản lý tích hợp Google Calendar API — tra cứu lịch rảnh (free/busy)
-         và tạo sự kiện mới (create_event).
+Vai trò: Quản lý tích hợp Google Calendar API — tra cứu lịch rảnh và tạo sự kiện lịch.
+
+Mô tả chi tiết:
+- Kết nối với Google Calendar API qua `GoogleOAuthService` để tương tác với lịch làm việc của người dùng.
+- Tra cứu lịch bận/rảnh (`calendar_freebusy`) trong khoảng thời gian chỉ định và tự động gợi ý các khung giờ rảnh (candidate slots) phù hợp trong giờ làm việc.
+- Tạo sự kiện mới (`calendar_create_event`) trên Google Calendar với đầy đủ thông tin: tiêu đề, mô tả, thời gian bắt đầu/kết thúc và danh sách người tham dự.
 """
 
 from datetime import datetime, timedelta

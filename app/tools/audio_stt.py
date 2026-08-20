@@ -1,3 +1,13 @@
+"""
+Module: audio_stt.py
+Vai trò: Công cụ Speech-to-Text (STT) - Chuyển đổi file âm thanh cuộc họp thành văn bản.
+
+Mô tả chi tiết:
+- Sử dụng Groq Audio API (Whisper model) để nhận diện giọng nói với độ chính xác cao và tốc độ xử lý nhanh.
+- Phân tích chi tiết theo từng phân đoạn (segments) kèm mốc thời gian (timestamp start/end) và thông tin người nói (nếu có).
+- Đóng gói dữ liệu đầu ra thành danh sách các mẩu bằng chứng (EvidenceRef) chuẩn hóa mang loại nguồn `SourceType.AUDIO`.
+"""
+
 from pathlib import Path
 from groq import Groq
 

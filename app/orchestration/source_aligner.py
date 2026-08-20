@@ -18,14 +18,14 @@ model = CrossEncoder(
     automodel_args={"token": settings.hf_token} if settings.hf_token else None,
 )
   
-def align_sources_cross_encoder(
-    evidence: list[EvidenceRef],
+def align_sources(
+    evidences: list[EvidenceRef],
     threshold: float = 0.7,
 ) -> list[dict]:
     """Gom nhóm các mẩu bằng chứng có ngữ nghĩa tương đồng bằng mô hình Cross-Encoder."""
     groups: list[dict] = []
 
-    for item in evidence:
+    for item in evidences:
         best_group = None
         best_score = -1.0
 
