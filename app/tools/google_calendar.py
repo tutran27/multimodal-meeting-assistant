@@ -8,12 +8,15 @@ Mô tả chi tiết:
 - Tạo sự kiện mới (`calendar_create_event`) trên Google Calendar với đầy đủ thông tin: tiêu đề, mô tả, thời gian bắt đầu/kết thúc và danh sách người tham dự.
 """
 
+import logging
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from app.core.config import settings
 from app.core.exceptions import ConfigurationError, ToolExecutionError
 from app.services.oauth_service import GoogleOAuthService
+
+logger = logging.getLogger(__name__)
 
 
 def _parse_iso(value: str) -> datetime:
@@ -70,7 +73,9 @@ def _find_free_slots(
 
 def calendar_freebusy(time_min: str, time_max: str, duration_minutes: int = 60) -> dict:
     """Tra cứu khoảng thời gian bận/rảnh trên Google Calendar."""
+    logger.info(f"📅 [CALENDAR FREEBUSY START] Looking up free slots from {time_min} to {time_max} (duration={duration_minutes}m)")
     if not settings.google_enabled:
+        logger.warning("📅 [CALENDAR FREEBUSY] GOOGLE_ENABLED=false: returning mock/empty result")
         raise ConfigurationError("GOOGLE_ENABLED=false")
 
     try:
@@ -85,12 +90,15 @@ def calendar_freebusy(time_min: str, time_max: str, duration_minutes: int = 60) 
         busy = response.get("calendars", {}).get(settings.google_calendar_id, {}).get("busy", [])
         start = _parse_iso(time_min)
         end = _parse_iso(time_max)
+        candidate_slots = _find_free_slots(start, end, busy, duration_minutes)
 
+        logger.info(f"📅 [CALENDAR FREEBUSY DONE] Found {len(busy)} busy ranges, generated {len(candidate_slots)} candidate free slots")
         return {
             "busy": busy,
-            "candidate_slots": _find_free_slots(start, end, busy, duration_minutes),
+            "candidate_slots": candidate_slots,
         }
     except Exception as exc:
+        logger.error(f"📅 [CALENDAR FREEBUSY ERROR] Lookup failed: {exc}")
         raise ToolExecutionError(f"Calendar free/busy failed: {exc}") from exc
 
 
@@ -102,7 +110,9 @@ def calendar_create_event(
     description: str = "",
 ) -> dict:
     """Tạo sự kiện mới trên Google Calendar."""
+    logger.info(f"📅 [CALENDAR CREATE EVENT START] Creating event '{title}' ({start} -> {end}) for attendees: {attendees}")
     if not settings.google_enabled:
+        logger.warning("📅 [CALENDAR CREATE EVENT] GOOGLE_ENABLED=false")
         raise ConfigurationError("GOOGLE_ENABLED=false")
 
     try:
@@ -121,8 +131,12 @@ def calendar_create_event(
             sendUpdates="none",
         ).execute()
 
-        return {"event_id": event.get("id"), "html_link": event.get("htmlLink")}
+        event_id = event.get("id")
+        html_link = event.get("htmlLink")
+        logger.info(f"📅 [CALENDAR CREATE EVENT DONE] Created event ID={event_id} Link={html_link}")
+        return {"event_id": event_id, "html_link": html_link}
     except Exception as exc:
+        logger.error(f"📅 [CALENDAR CREATE EVENT ERROR] Failed to create event '{title}': {exc}")
         raise ToolExecutionError(f"Create calendar event failed: {exc}") from exc
 
 

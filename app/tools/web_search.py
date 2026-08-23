@@ -8,11 +8,16 @@ Mô tả chi tiết:
 - Trả về kết quả có cấu trúc gồm tiêu đề (`title`), liên kết (`url`) và đoạn trích tóm tắt (`snippet`).
 """
 
+import logging
+
 from app.core.config import settings
 from app.core.exceptions import ToolExecutionError
 
+logger = logging.getLogger(__name__)
+
 def web_search(query: str, max_results: int | None = None) -> dict:
     limit = max_results or settings.search_max_results
+    logger.info(f"🌐 [WEB SEARCH START] Querying: '{query}' (limit={limit})")
     try:
         from tavily import TavilyClient
         tavily_client = TavilyClient(api_key=settings.search_api_key)
@@ -25,11 +30,13 @@ def web_search(query: str, max_results: int | None = None) -> dict:
             }
             for row in response.get("results", [])
         ]
+        logger.info(f"🌐 [WEB SEARCH DONE] Found {len(results)} search results for '{query}'")
         return {
             "query": query,
             "results": results,
         }
     except Exception as exc:
+        logger.error(f"🌐 [WEB SEARCH ERROR] Search failed for query '{query}': {exc}")
         raise ToolExecutionError(f"Web search failed: {exc}") from exc
 
 if __name__ == "__main__":

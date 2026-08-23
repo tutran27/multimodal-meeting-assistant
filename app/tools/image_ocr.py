@@ -9,6 +9,7 @@ Mô tả chi tiết:
 - Đóng gói kết quả thành danh sách các mẩu bằng chứng (`EvidenceRef`) chuẩn hóa với loại nguồn `SourceType.IMAGE`.
 """
 
+import logging
 from pathlib import Path
 from huggingface_hub import snapshot_download
 from paddleocr import PaddleOCR
@@ -18,9 +19,12 @@ from app.core.constants import SourceType
 from app.core.exceptions import ToolExecutionError
 from app.schemas.evidence import EvidenceRef
 
+logger = logging.getLogger(__name__)
+
 
 def extract_image_text(file_path: str | Path) -> list[EvidenceRef]:
     path = Path(file_path)
+    logger.info(f"🖼️ [IMAGE OCR START] Processing image: {path.name} (device={settings.ocr_device})")
 
     if not path.exists():
         raise FileNotFoundError(path)
@@ -36,6 +40,7 @@ def extract_image_text(file_path: str | Path) -> list[EvidenceRef]:
         )
         results = pipeline.predict(str(path))
     except Exception as exc:
+        logger.error(f"🖼️ [IMAGE OCR ERROR] PaddleOCR failed: {exc}")
         raise ToolExecutionError(f"PaddleOCR failed: {exc}") from exc
 
     output: list[EvidenceRef] = []
@@ -70,6 +75,7 @@ def extract_image_text(file_path: str | Path) -> list[EvidenceRef]:
                 )
                 counter += 1
 
+    logger.info(f"🖼️ [IMAGE OCR DONE] Extracted {len(output)} text lines from image {path.name}")
     return output
 
 

@@ -1,0 +1,56 @@
+[
+  {
+    "name": "Minh Hoàng",
+    "email": "minhhoang@company.com",
+    "role": "Product Manager",
+    "company": "Smart Assistant AI"
+  },
+  {
+    "name": "Thanh Tú",
+    "email": "thanhtu@company.com",
+    "role": "Lead Backend Engineer",
+    "company": "Smart Assistant AI"
+  },
+  {
+    "name": "Lan Anh",
+    "email": "lananh@company.com",
+    "role": "UI/UX Designer",
+    "company": "Smart Assistant AI"
+  },
+  {
+    "name": "Hoàng Nam",
+    "email": "hoangnam@company.com",
+    "role": "Marketing Director",
+    "company": "Smart Assistant AI"
+  },
+  {
+    "name": "Mai Phương",
+    "email": "maiphuong@company.com",
+    "role": "Head of Sales",
+    "company": "Smart Assistant AI"
+  },
+  {
+    "name": "Quốc Bảo",
+    "email": "quocbao@company.com",
+    "role": "Tech Support Lead",
+    "company": "Smart Assistant AI"
+  },
+  {
+    "name": "Hương Giang",
+    "email": "huonggiang@company.com",
+    "role": "Project Manager",
+    "company": "Smart Assistant AI"
+  },
+  {
+    "name": "Anh Đức",
+    "email": "duc.nguyen@fpt.com",
+    "role": "Solution Architect",
+    "company": "FPT Software"
+  },
+  {
+    "name": "Tuấn Kiệt",
+    "email": "tuankiet@company.com",
+    "role": "AI Engineer",
+    "company": "Smart Assistant AI"
+  }
+]

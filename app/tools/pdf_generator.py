@@ -12,6 +12,7 @@ Mô tả chi tiết:
 - Tự động tính toán mã băm SHA-256 và kích thước file sau khi tạo để phục vụ lưu trữ và toàn vẹn dữ liệu.
 """
 
+import logging
 from pathlib import Path
 
 from reportlab.lib.enums import TA_CENTER
@@ -26,18 +27,13 @@ from app.core.config import settings
 from app.schemas.state import RunState
 from app.services.storage_service import StorageService
 
+logger = logging.getLogger(__name__)
+
 def _register_font() -> str:
-    candidates = [
-        settings.report_font_path,
-        Path("D:/project/Multi-modal Smart Personal Assistant/assets/fonts/timesnewroman.ttf"),
-        Path("C:/Windows/Fonts/timesnewroman.ttf"),
-        Path("C:/Windows/Fonts/arial.ttf"),
-        
-    ]
-    for candidate in candidates:
-        if candidate and Path(candidate).exists():
-            pdfmetrics.registerFont(TTFont("ReportFont", str(candidate)))
-            return "ReportFont"
+    font_path = settings.report_font_path or Path("assets/fonts/DejaVuSans.ttf")
+    if Path(font_path).exists():
+        pdfmetrics.registerFont(TTFont("ReportFont", str(font_path)))
+        return "ReportFont"
     return "Helvetica"
 
 def _get_styles(font_name: str) -> dict[str, ParagraphStyle]:
@@ -52,6 +48,7 @@ def generate_pdf(state: RunState) -> dict:
     output_dir = settings.output_dir / state.session_id
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "meeting_report.pdf"
+    logger.info(f"📄 [PDF GENERATOR START] Generating PDF report to: {output_path}")
 
     font_name = _register_font()
     styles = _get_styles(font_name)
@@ -129,10 +126,14 @@ def generate_pdf(state: RunState) -> dict:
     )
     doc.build(story)
 
+    file_size = output_path.stat().st_size
+    sha256_hash = StorageService.sha256(output_path)
+    logger.info(f"📄 [PDF GENERATOR DONE] PDF built successfully: size={file_size} bytes, sha256={sha256_hash[:12]}...")
+
     return {
         "file_path": str(output_path),
-        "sha256": StorageService.sha256(output_path),
-        "file_size": output_path.stat().st_size,
+        "sha256": sha256_hash,
+        "file_size": file_size,
     }
 
 

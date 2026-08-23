@@ -9,6 +9,7 @@ Mô tả chi tiết:
 - Trả về kết quả đối soát (`FactValidationResult`) gồm thực thể đã chuẩn hóa và danh sách cảnh báo/vấn đề phát hiện (`ValidationIssue`).
 """
 
+import logging
 import re
 from datetime import date
 
@@ -17,10 +18,13 @@ from app.schemas.extraction import MeetingExtraction
 from app.schemas.validation import FactValidationResult, ValidationIssue
 from app.services.contact_repository import ContactRepository
 
+logger = logging.getLogger(__name__)
+
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 def validate_extraction(extraction: MeetingExtraction) -> FactValidationResult:
+    logger.info(f"🔍 [FACT VALIDATOR START] Validating {len(extraction.action_items)} action items against contacts & facts...")
     issues: list[ValidationIssue] = []
     contacts = ContactRepository()
     normalized_entities: dict = {"contacts": {}}
@@ -59,6 +63,7 @@ def validate_extraction(extraction: MeetingExtraction) -> FactValidationResult:
             contact = contacts.find(item.owner)
             if contact:
                 normalized_entities["contacts"][item.owner] = contact
+                logger.info(f"🔍 [FACT VALIDATOR] Matched owner '{item.owner}' to contact: {contact.get('email')}")
 
     for name, contact in normalized_entities["contacts"].items():
         email = contact.get("email")
@@ -70,6 +75,7 @@ def validate_extraction(extraction: MeetingExtraction) -> FactValidationResult:
                 )
             )
 
+    logger.info(f"🔍 [FACT VALIDATOR DONE] Found {len(issues)} issues, matched {len(normalized_entities['contacts'])} contacts")
     return FactValidationResult(normalized_entities=normalized_entities, issues=issues)
 
 if __name__ == "__main__":

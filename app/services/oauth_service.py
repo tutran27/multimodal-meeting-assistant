@@ -27,13 +27,26 @@ class GoogleOAuthService:
 
         token_file = Path(settings.google_token_file)
         client_secret_file = Path(settings.google_client_secret_file)
+
+        # Tự động tìm file client_secret nếu đường dẫn mặc định không thấy
+        if not client_secret_file.exists():
+            for candidate in Path("credentials").glob("client_secret*.json"):
+                client_secret_file = candidate
+                break
+
         credentials = None
 
         if token_file.exists():
-            credentials = Credentials.from_authorized_user_file(token_file, GOOGLE_SCOPES)
+            try:
+                credentials = Credentials.from_authorized_user_file(token_file, GOOGLE_SCOPES)
+            except Exception:
+                credentials = None
 
         if credentials and credentials.expired and credentials.refresh_token:
-            credentials.refresh(Request())
+            try:
+                credentials.refresh(Request())
+            except Exception:
+                credentials = None
 
         if not credentials or not credentials.valid:
             if not client_secret_file.exists():

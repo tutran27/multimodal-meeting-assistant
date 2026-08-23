@@ -20,6 +20,7 @@ def get_llm():
         api_key=settings.groq_api_key,
         model=settings.groq_llm_model,
         temperature=settings.llm_temperature,
+        max_tokens=settings.llm_max_tokens,
         timeout=settings.llm_timeout_seconds,
         max_retries=settings.llm_max_retries,
     )

@@ -8,6 +8,7 @@ Mô tả chi tiết:
 - Đóng gói dữ liệu đầu ra thành danh sách các mẩu bằng chứng (EvidenceRef) chuẩn hóa mang loại nguồn `SourceType.AUDIO`.
 """
 
+import logging
 from pathlib import Path
 from groq import Groq
 
@@ -16,9 +17,12 @@ from app.core.constants import SourceType
 from app.core.exceptions import ConfigurationError, ToolExecutionError
 from app.schemas.evidence import EvidenceRef
 
+logger = logging.getLogger(__name__)
+
 
 def transcribe_audio(file_path: str | Path) -> list[EvidenceRef]:
     path = Path(file_path)
+    logger.info(f"🎙️ [AUDIO STT START] Transcribing file: {path.name} (size: {path.stat().st_size if path.exists() else 0} bytes)")
 
     if not settings.groq_api_key:
         raise ConfigurationError("GROQ_API_KEY is required for STT")
@@ -39,6 +43,7 @@ def transcribe_audio(file_path: str | Path) -> list[EvidenceRef]:
             )
         trans_dict = transcription.model_dump() if hasattr(transcription, 'model_dump') else (transcription.dict() if hasattr(transcription, 'dict') else vars(transcription))
     except Exception as exc:
+        logger.error(f"🎙️ [AUDIO STT ERROR] Groq STT failed: {exc}")
         raise ToolExecutionError(f"Groq STT failed: {exc}") from exc
 
     raw_segments = trans_dict.get("segments", []) 
@@ -69,6 +74,7 @@ def transcribe_audio(file_path: str | Path) -> list[EvidenceRef]:
             )
         )
 
+    logger.info(f"🎙️ [AUDIO STT DONE] Extracted {len(evidence)} evidence segments from audio")
     return evidence
 
 

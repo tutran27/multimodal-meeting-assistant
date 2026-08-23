@@ -1,57 +1,92 @@
-# Python bytecode and caches
+# ==========================================
+# Python Bytecode & Build Artifacts
+# ==========================================
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
-# Environments & Dependencies
+# ==========================================
+# Virtual Environments
+# ==========================================
 .venv/
 venv/
 ENV/
 env/
-lib/
-bin/
-include/
-share/
+env.bak/
+venv.bak/
 
-# Secret & Configuration files
+# ==========================================
+# Secrets, Tokens & Environment Files
+# ==========================================
 .env
 .env.*
 !.env.example
-**/credentials.json
-**/token*.json
+*.pem
+*.key
+**/*client_secret*.json
+**/*token*.json
 **/*credentials*.json
 **/.streamlit/secrets.toml
 
-# IDEs and Editors
+# ==========================================
+# Database & Logs
+# ==========================================
+*.db
+*.sqlite
+*.sqlite3
+*.log
+logs/*
+!logs/.gitkeep
+
+# ==========================================
+# Project Storage & Working Dirs
+# ==========================================
+outputs/*
+!outputs/.gitkeep
+data/inputs/*
+!data/inputs/.gitkeep
+data/temp/*
+!data/temp/.gitkeep
+
+# ==========================================
+# Credentials Folder (Keep structure via .gitkeep)
+# ==========================================
+credentials/*
+!credentials/.gitkeep
+
+# ==========================================
+# IDEs, Editors & OS Files
+# ==========================================
 .vscode/
 .idea/
 *.swp
 *.swo
-.ipynb_checkpoints/
-**/checkpoints/
-
-# OS files
 .DS_Store
 Thumbs.db
 desktop.ini
-
-# Project-specific directories (Ignore contents but keep the folder structure via .gitkeep)
-credentials/*
-!credentials/.gitkeep
-
-logs/*
-!logs/.gitkeep
-
-outputs/*
-!outputs/.gitkeep
-
-data/temp/*
-!data/temp/.gitkeep
-
-data/inputs/*
-!data/inputs/.gitkeep
-
-# Local data / mock databases (optional - remove if you want to commit seed data)
-data/contacts.json
+.ipynb_checkpoints/
+**/checkpoints/
+.agents/
+.gemini/

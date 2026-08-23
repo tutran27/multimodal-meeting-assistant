@@ -9,6 +9,7 @@ Mô tả chi tiết:
 - Nhận diện người phát biểu (speaker) theo cú pháp hội thoại và đóng gói thành danh sách `EvidenceRef` với loại nguồn `SourceType.MEETING_SCRIPT`.
 """
 
+import logging
 import re
 from pathlib import Path
 
@@ -17,6 +18,8 @@ from app.schemas.evidence import EvidenceRef
 from app.services.document_reader import DocumentReader
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+logger = logging.getLogger(__name__)
 
 def split_text(raw_text: str) -> list[str]:
     text_splitter = RecursiveCharacterTextSplitter(
@@ -42,17 +45,18 @@ def classify_script(text: str) -> ScriptType:
 
 def parse_script(file_path: str | Path | None = None,
                  raw_text: str | None = None) -> tuple[ScriptType, list[EvidenceRef]]:
+    source_name = Path(file_path).name if file_path else "pasted_script"
+    logger.info(f"📄 [SCRIPT PARSER START] Parsing script from source: {source_name}")
+
     if raw_text is None:
         if not file_path:
+            logger.info("📄 [SCRIPT PARSER] No script file or text provided.")
             return ScriptType.UNKNOWN, []
         raw_text = DocumentReader().read(file_path)
-        
-    print(f"Raw text: {str(raw_text)}")
-    print(f"Type: {type(raw_text)}")
-    print(len(raw_text))
-    source_name = Path(file_path).name if file_path else "pasted_script"
+
     script_type = classify_script(raw_text)
     blocks = split_text(raw_text)
+    logger.info(f"📄 [SCRIPT PARSER] Classified as '{script_type.value}', length={len(raw_text)} chars, split into {len(blocks)} chunks")
 
     evidence = []
     for idx, block in enumerate(blocks, start=1):
@@ -76,6 +80,7 @@ def parse_script(file_path: str | Path | None = None,
             )
         )
 
+    logger.info(f"📄 [SCRIPT PARSER DONE] Created {len(evidence)} evidence segments")
     return script_type, evidence
 
 

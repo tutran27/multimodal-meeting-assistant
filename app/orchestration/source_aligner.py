@@ -15,7 +15,7 @@ from app.core.constants import SourceType
 
 model = CrossEncoder(
     "BAAI/bge-reranker-v2-m3",
-    automodel_args={"token": settings.hf_token} if settings.hf_token else None,
+    model_kwargs={"token": settings.hf_token} if settings.hf_token else None,
 )
   
 def align_sources(

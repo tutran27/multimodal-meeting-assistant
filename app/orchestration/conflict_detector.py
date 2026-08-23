@@ -9,24 +9,19 @@ Mô tả chi tiết:
 - Tự động sinh ra các cảnh báo `ValidationIssue` (như `possible_date_conflict`, `possible_amount_conflict`) nếu phát hiện có sự mâu thuẫn về số liệu giữa các nguồn, giúp hệ thống gắn cờ để người dùng hoặc Reflection Agent xử lý.
 """
 
+import logging
 import re
 from app.schemas.evidence import EvidenceRef
 from app.schemas.validation import ValidationIssue
 
+logger = logging.getLogger(__name__)
 
 DATE_PATTERN = re.compile(r"\b(?:\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?)\b")
 MONEY_PATTERN = re.compile(r"\b\d+(?:[.,]\d+)?\s*(?:triệu|tỷ|million|billion|m|bn)\b", re.IGNORECASE)
 
 
 def detect_conflicts(evidence: list[EvidenceRef]) -> list[ValidationIssue]:
-    """Quét và phát hiện các xung đột về ngày tháng hoặc số tiền giữa các nguồn dữ liệu đa phương thức.
-
-    Args:
-        evidence: Danh sách các mẩu bằng chứng (EvidenceRef) đã được tiền xử lý từ Audio, OCR, Text.
-
-    Returns:
-        Danh sách các đối tượng ValidationIssue mô tả chi tiết các điểm mâu thuẫn phát hiện được.
-    """
+    """Quét và phát hiện các xung đột về ngày tháng hoặc số tiền giữa các nguồn dữ liệu đa phương thức."""
     dates: dict[str, set[str]] = {}
     amounts: dict[str, set[str]] = {}
 
@@ -47,20 +42,27 @@ def detect_conflicts(evidence: list[EvidenceRef]) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
 
     if len(dates) > 1:
+        msg = f"Phát hiện nhiều giá trị ngày tháng khác nhau giữa các nguồn: {sorted(dates)}"
+        logger.warning(f"⚡ [CONFLICT DETECTOR] {msg}")
         issues.append(
             ValidationIssue(
                 issue_type="possible_date_conflict",
-                message=f"Phát hiện nhiều giá trị ngày tháng khác nhau giữa các nguồn: {sorted(dates)}",
+                message=msg,
             )
         )
 
     if len(amounts) > 1:
+        msg = f"Phát hiện nhiều giá trị số tiền/ngân sách khác nhau giữa các nguồn: {sorted(amounts)}"
+        logger.warning(f"⚡ [CONFLICT DETECTOR] {msg}")
         issues.append(
             ValidationIssue(
                 issue_type="possible_amount_conflict",
-                message=f"Phát hiện nhiều giá trị số tiền/ngân sách khác nhau giữa các nguồn: {sorted(amounts)}",
+                message=msg,
             )
         )
+
+    if not issues:
+        logger.info(f"⚡ [CONFLICT DETECTOR] No cross-source conflicts detected in {len(evidence)} items")
 
     return issues
 

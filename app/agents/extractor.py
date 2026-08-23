@@ -10,27 +10,24 @@ Mô tả chi tiết:
 
 import asyncio
 import json
+import logging
 import re
 from typing import Any
 from typing import List
 
+from app.core.json_utils import extract_json_payload
 from app.core.prompts import EXTRACTION_PROMPT
 from app.schemas.evidence import EvidenceRef
 from app.schemas.extraction import ActionItem, MeetingExtraction
 from app.schemas.state import RunState
 from app.services.llm_service import get_llm
 
-
-def _extract_json_object(text: str) -> dict[str, Any]:
-    """Lấy JSON object đầu tiên từ output LLM."""
-    match = re.search(r"\{.*\}", text, flags=re.DOTALL)
-    if not match:
-        raise ValueError(f"LLM không trả về JSON object hợp lệ: {text}")
-    return json.loads(match.group(0))
+logger = logging.getLogger(__name__)
 
 
-async def _extract_batch(batch: List[EvidenceRef], user_request: str, script_type: str) -> MeetingExtraction:
+async def _extract_batch(batch: List[EvidenceRef], user_request: str, script_type: str, batch_idx: int = 1) -> MeetingExtraction:
     """Map step: Trích xuất thông tin cho 1 batch evidence nhỏ."""
+    logger.info(f"🧠 [EXTRACTOR] Processing batch #{batch_idx} ({len(batch)} evidence items)...")
     evidence_text = "\n".join(
         f"[{item.evidence_id}] source={item.source_type.value}; speaker={item.speaker or 'unknown'}; text={item.content}"
         for item in batch
@@ -43,11 +40,13 @@ async def _extract_batch(batch: List[EvidenceRef], user_request: str, script_typ
         "Chỉ trả về một JSON object, không markdown, không giải thích.\n"
         "JSON bắt buộc có các key: summary, participants, organizations, decisions, action_items, unresolved_questions.\n"
         "Mỗi action item có các key: action_id, description, owner, deadline, priority, duration_minutes, evidence_ids, status.\n"
-        "Giữ output ngắn gọn: summary tối đa 4 câu, decisions tối đa 5 mục, action_items tối đa 5 mục, unresolved_questions tối đa 5 mục."
+        "Giữ output ngắn gọn và chuẩn xác: summary tối đa 3-4 câu; decisions tối đa 3-4 mục cốt lõi (gộp các ý kỹ thuật liên quan, TUYỆT ĐỐI không đưa task cá nhân/deadline hay nhận định tình trạng vào); action_items tối đa 5-7 mục; unresolved_questions tối đa 3 mục."
     )
     response = await get_llm().ainvoke(prompt)
-    payload = _extract_json_object(response.content)
-    return MeetingExtraction.model_validate(payload)
+    payload = extract_json_payload(response.content)
+    result = MeetingExtraction.model_validate(payload)
+    logger.info(f"🧠 [EXTRACTOR] Batch #{batch_idx} done: found {len(result.action_items)} actions, {len(result.decisions)} decisions")
+    return result
 
 
 def _merge_results(results: List[MeetingExtraction]) -> MeetingExtraction:
@@ -64,7 +63,7 @@ def _merge_results(results: List[MeetingExtraction]) -> MeetingExtraction:
             item.action_id = f"ACTION_{len(action_items) + 1:03d}"
             action_items.append(item)
 
-    return MeetingExtraction(
+    merged = MeetingExtraction(
         summary="\n\n".join(summaries),
         participants=participants,
         organizations=organizations,
@@ -72,17 +71,21 @@ def _merge_results(results: List[MeetingExtraction]) -> MeetingExtraction:
         action_items=action_items,
         unresolved_questions=unresolved,
     )
+    logger.info(f"🧠 [EXTRACTOR MERGED] Final Summary: {len(merged.summary)} chars | Participants: {merged.participants} | Actions: {len(merged.action_items)} | Decisions: {len(merged.decisions)}")
+    return merged
 
 async def extract_meeting_information_async(state: RunState, batch_size: int = 2) -> MeetingExtraction:
     """Hàm chính: Thực thi Map-Reduce bất đồng bộ song song."""
     all_evidence = state.all_evidence
     if not all_evidence:
+        logger.info("🧠 [EXTRACTOR] No evidence found to extract.")
         return MeetingExtraction()
 
     batches = [all_evidence[i : i + batch_size] for i in range(0, len(all_evidence), batch_size)]
+    logger.info(f"🧠 [EXTRACTOR START] Extracting from {len(all_evidence)} total evidences across {len(batches)} batches (batch_size={batch_size})")
     results = []
-    for batch in batches:
-        result = await _extract_batch(batch, state.user_request, state.script_type.value)
+    for idx, batch in enumerate(batches, start=1):
+        result = await _extract_batch(batch, state.user_request, state.script_type.value, batch_idx=idx)
         results.append(result)
     return _merge_results(results)
 

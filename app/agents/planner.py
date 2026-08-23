@@ -10,27 +10,24 @@ Mô tả chi tiết:
 """
 
 import json
+import logging
 import re
 from datetime import datetime
 from typing import Any
 from zoneinfo import ZoneInfo
 
 from app.core.config import settings
+from app.core.json_utils import extract_json_payload
 from app.core.prompts import PLANNER_PROMPT
 from app.schemas.plan import ExecutionPlan
 from app.schemas.state import RunState
 from app.services.llm_service import get_llm
 
-
-def _extract_json_object(text: str) -> dict[str, Any]:
-    """Lấy JSON object từ response content của LLM."""
-    match = re.search(r"\{.*\}", text, flags=re.DOTALL)
-    if not match:
-        raise ValueError(f"LLM không trả về JSON object hợp lệ: {text}")
-    return json.loads(match.group(0))
+logger = logging.getLogger(__name__)
 
 
 def create_plan(state: RunState) -> ExecutionPlan:
+    logger.info(f"📋 [PLANNER START] Generating plan for request: '{state.user_request}'")
     context = {
         "request": state.user_request,
         "summary": state.extraction.summary,
@@ -49,8 +46,12 @@ def create_plan(state: RunState) -> ExecutionPlan:
     )
 
     response = get_llm().invoke(prompt)
-    payload = _extract_json_object(response.content)
-    return ExecutionPlan.model_validate(payload)
+    payload = extract_json_payload(response.content)
+    plan = ExecutionPlan.model_validate(payload)
+    logger.info(f"📋 [PLANNER DONE] Created plan with {len(plan.steps)} steps:")
+    for step in plan.steps:
+        logger.info(f"   ├─ [{step.step_id}] Tool: {step.tool_name} | Objective: {step.objective} | Depends on: {step.depends_on}")
+    return plan
 
 
 if __name__ == "__main__":
