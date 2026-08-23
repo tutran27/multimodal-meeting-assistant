@@ -92,6 +92,19 @@ def _handle_email_draft(arguments: dict[str, Any], state: RunState) -> dict:
     )
 
 
+def _handle_calendar_create_event(arguments: dict[str, Any], state: RunState) -> dict:
+    """Tạo sự kiện lịch: nếu chưa có start/end, tự động lấy slot rảnh đầu tiên từ freebusy."""
+    if not arguments.get("start") or str(arguments.get("start")).startswith("{{"):
+        for res in state.tool_results.values():
+            slots = res.get("candidate_slots", []) if isinstance(res, dict) else []
+            if slots:
+                arguments["start"] = slots[0]["start"]
+                arguments["end"] = slots[0]["end"]
+                break
+
+    return calendar_create_event(**arguments)
+
+
 def _execute_tool(step: PlanStep, state: RunState) -> dict:
     """Gọi tool phù hợp dựa trên step.tool_name."""
     arguments = resolve_arguments(step.arguments, state)
@@ -101,7 +114,7 @@ def _execute_tool(step: PlanStep, state: RunState) -> dict:
     if tool_name == "calendar_freebusy":
         result = calendar_freebusy(**arguments)
     elif tool_name == "calendar_create_event":
-        result = calendar_create_event(**arguments)
+        result = _handle_calendar_create_event(arguments, state)
     elif tool_name == "web_search":
         result = web_search(**arguments)
     elif tool_name == "pdf_generator":

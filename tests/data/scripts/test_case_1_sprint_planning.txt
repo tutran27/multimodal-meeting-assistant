@@ -1,0 +1,45 @@
+Minh Hoàng: Chào mọi người, chúng ta bắt đầu buổi họp Sprint Planning cho giai đoạn nước rút của dự án Multi-modal Smart Personal Assistant nhé. Hôm nay có anh, Thanh Tú và Lan Anh tham gia đầy đủ. Tuần vừa rồi chúng ta đã đạt được những bước tiến rất quan trọng ở tầng Core và Services, nên hôm nay mục tiêu là rà soát toàn bộ các vấn đề kỹ thuật còn tồn đọng, thống nhất kiến trúc orchestration và phân chia công việc cụ thể cho hai tuần tới. Tú ơi, em có thể báo cáo chi tiết về hiệu năng của các module nhận diện dữ liệu đầu vào hiện tại không?
+
+Thanh Tú: Dạ vâng anh Hoàng. Về phần xử lý đa phương thức, em đã hoàn thành việc tích hợp và benchmark hai thành phần cốt lõi:
+Thứ nhất là module OCR: Em đã thử nghiệm cả EasyOCR và PaddleOCR trên tập dữ liệu gồm 50 ảnh chụp biên bản họp thực tế, tài liệu in và cả chữ viết tay trên bảng trắng. Kết quả là PaddleOCR cho độ chính xác nhận diện tiếng Việt cao hơn hẳn, đạt xấp xỉ 94% và tốc độ xử lý nhanh hơn gần 30% trên CPU. Do đó em đã chốt dùng PaddleOCR làm engine OCR chính thức.
+Thứ hai là module Speech-to-Text: Ban đầu chúng ta dự định chạy mô hình Whisper cục bộ, nhưng khi test tải với các file ghi âm dài từ 20 đến 30 phút thì RAM và CPU bị đẩy lên rất cao. Em đã chuyển sang tích hợp Groq Whisper STT qua API model whisper-large-v3-turbo. Tốc độ nhận diện cực kỳ ấn tượng, file âm thanh 10 phút chỉ mất chưa tới 3 giây để bóc băng toàn bộ văn bản tiếng Việt có dấu.
+
+Lan Anh: Anh Tú cho em hỏi chút, phần Whisper qua Groq API khi xử lý các giọng địa phương như giọng miền Trung hay giọng có nhiều từ chèn tiếng Anh chuyên ngành công nghệ thông tin như Kubernetes, Microservices hay Pydantic thì độ chính xác có bị giảm không anh?
+
+Thanh Tú: Câu hỏi rất hay Lan Anh. Trong prompt gửi kèm API cho Whisper, anh đã bổ sung thêm một danh sách keyword chuyên ngành và từ vựng ngữ cảnh về software engineering. Kết quả thử nghiệm cho thấy model nhận diện rất chuẩn các từ mượn tiếng Anh. Đối với giọng miền Trung thì model vẫn nhận diện được khoảng 88 đến 90%, đủ tốt để tầng Information Extractor sau đó tự động suy luận ngữ cảnh và chuẩn hóa lại.
+
+Minh Hoàng: Rất tốt. Vậy là tầng Multimodal Input đã cơ bản ổn định. Bây giờ chúng ta chuyển sang phần quan trọng nhất: Module Orchestration và Execution Plan. Tú phân tích kỹ hơn về các vấn đề gặp phải khi chạy các Tool trong tuần qua đi.
+
+Thanh Tú: Dạ anh Hoàng, đây chính là phần em muốn trao đổi kỹ trong buổi họp hôm nay. Trong quá trình chạy thử nghiệm luồng Executor tự động, em phát hiện ra 2 vấn đề lớn:
+Vấn đề thứ nhất là quản lý phụ thuộc và chạy song song: Khi Planner sinh ra một kế hoạch gồm nhiều bước, ví dụ: bước 1 là tìm kiếm thông tin trên Web, bước 2 là kiểm tra lịch rảnh calendar_freebusy, bước 3 là sinh file báo cáo PDF và bước 4 là tạo bản nháp email draft. Rõ ràng bước 1 và bước 2 hoàn toàn độc lập, chúng ta có thể dùng asyncio.gather để chạy đồng thời nhằm rút ngắn thời gian phản hồi cho người dùng. Tuy nhiên, trước đây nếu 1 trong 2 bước bị lỗi mạng thì hàm gather mặc định sẽ ném exception và làm sập luôn toàn bộ kế hoạch. Em đã thêm tham số return_exceptions=True để gom lỗi một cách an toàn. Nhờ vậy, bước nào thành công thì vẫn ghi nhận vào state, bước nào lỗi thì chỉ đánh dấu FAILED và lưu vào danh sách validation_issues để báo cáo lại cho người dùng.
+Vấn đề thứ hai là tham chiếu động giữa các bước (Dynamic Reference Resolving): Khi Planner lập kế hoạch ở thời điểm ban đầu, nó chưa thể biết trước kết quả trả về của các tool ở bước trước. Ví dụ, bước tạo draft email cần đính kèm đường dẫn file PDF vừa sinh ra ở bước 3. Em đã thiết kế cú pháp placeholder dạng chuỗi như {{state.report_path}} hay {{state.extraction.summary}} và viết module reference_resolver để tự động quét và thế dữ liệu thật vào tham số ngay trước khi gọi Tool.
+Em dự kiến sẽ hoàn thiện toàn bộ mã nguồn của module Reference Resolver, tối ưu lại Executor và bổ sung unit test cho luồng concurrency này trước ngày 28 tháng 8 năm 2026.
+
+Minh Hoàng: Anh hoàn toàn nhất trí với giải pháp này của Tú. Về mặt kiến trúc, cơ chế tham chiếu động và gom lỗi độc lập là bắt buộc phải có cho một AI Agent thực thụ. Bây giờ xin mời Lan Anh chia sẻ về tiến độ của giao diện người dùng và những phản hồi từ đợt kiểm thử nội bộ vừa rồi.
+
+Lan Anh: Dạ vâng anh Hoàng và anh Tú. Về phía giao diện Streamlit, sau khi cho một số bạn trong công ty dùng thử bản v1, em đã tổng hợp được các điểm cần cải thiện lớn sau:
+1. Giao diện cũ bắt người dùng phải chọn một loại dữ liệu duy nhất (hoặc chỉ gửi text, hoặc chỉ gửi audio). Ở bản v2 mới này, em đã dựng lại layout đa cột (multi-column) cho phép người dùng cùng lúc tải lên file âm thanh ghi âm cuộc họp, đính kèm ảnh chụp bảng ghi chú và nhập thêm chỉ dẫn văn bản bổ sung.
+2. Em đã tích hợp thanh tiến trình (Progress Tracker) và khu vực hiển thị Timeline các bước thực thi. Người dùng có thể nhìn thấy trực quan hệ thống đang ở bước trích xuất thông tin, bước lập kế hoạch, hay đang chạy tool nào trong thời gian thực.
+3. Về mặt thẩm mỹ, em đang tùy biến lại bộ CSS theo phong cách hiện đại, màu sắc chủ đạo là Dark Slate kết hợp với điểm nhấn màu Cyan công nghệ, font chữ chuẩn Inter để dễ đọc biên bản họp dài.
+Em cam kết sẽ hoàn thiện toàn bộ bản thiết kế UI/UX trên Streamlit cùng mã nguồn frontend hoàn chỉnh trước ngày 25 tháng 8 năm 2026 để bàn giao cho Tú ráp nối API.
+
+Thanh Tú: Tuyệt vời quá Lan Anh ơi. Khi em làm xong thì anh sẽ chỉ cần gọi endpoint POST /api/v1/workflows/run là toàn bộ dữ liệu từ Streamlit sẽ được đẩy thẳng vào backend FastAPI.
+
+Minh Hoàng: Anh có một lưu ý cực kỳ nghiêm ngặt về mặt Chính sách an toàn (Safety Policy) mà cả Tú và Lan Anh đều phải ghi nhớ:
+Thứ nhất: Trợ lý của chúng ta tuyệt đối không được phép có quyền tự động gửi email trực tiếp ra bên ngoài (email_send). Chúng ta chỉ cung cấp tool email_create_draft để tạo bản nháp. Người dùng sẽ phải tự vào hòm thư xem lại và bấm gửi thủ công.
+Thứ hai: Đối với thao tác ghi lịch calendar_create_event, đây là thao tác có rủi ro cao (external_write). Executor bắt buộc phải dừng lại ở Policy Gate để yêu cầu người dùng xác nhận phê duyệt (Approval Required) thì mới được phép thực thi.
+Về phần công việc của anh: Anh sẽ phụ trách rà soát và hoàn thiện tài liệu đặc tả API chuẩn Swagger/OpenAPI, đồng thời làm sạch và bổ sung đầy đủ thông tin vào file data/contacts.json để hệ thống tra cứu danh bạ nhân sự chuẩn xác. Anh sẽ hoàn thành toàn bộ phần này trước ngày 24 tháng 8 năm 2026.
+
+Thanh Tú: Anh Hoàng ơi, sau khi Lan Anh bàn giao giao diện vào ngày 25 và em xong phần backend vào ngày 28, em đề xuất chúng ta sẽ có một buổi họp kiểm thử tích hợp toàn diện (Integration Testing) vào lúc 14 giờ chiều ngày 29 tháng 8 năm 2026 được không anh?
+
+Minh Hoàng: Rất chuẩn xác. Chúng ta chốt lịch họp Integration Test vào 14:00 ngày 29/08/2026 nhé. Buổi test đó chúng ta sẽ chạy thử trực tiếp trên các test case thực tế trong data/inputs.
+
+Lan Anh: Dạ em đã ghi nhận lịch họp ngày 29/08 rồi ạ. Em sẽ chuẩn bị sẵn các bộ test giao diện trên cả màn hình laptop và tablet.
+
+Minh Hoàng: Tổng kết lại các mốc hành động chính:
+- Minh Hoàng: Cập nhật tài liệu API và file contacts.json trước ngày 24/08/2026.
+- Lan Anh: Bàn giao giao diện Streamlit v2 hoàn chỉnh trước ngày 25/08/2026.
+- Thanh Tú: Hoàn thiện Reference Resolver, Executor concurrency và unit test trước ngày 28/08/2026.
+- Cả team: Họp Integration Testing vào 14:00 ngày 29/08/2026.
+
+Cảm ơn hai em rất nhiều, chúc team mình có một sprint làm việc thật năng suất và hiệu quả!

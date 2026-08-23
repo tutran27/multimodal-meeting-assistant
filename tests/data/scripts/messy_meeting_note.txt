@@ -1,0 +1,6 @@
+note nhanh hop chieu thu 6 voi team dev & sales
+- lan anh bao phan ocr tieng viet dang chay ngon tren gpu, se hoan tat truoc ngay 28/8 de ghep api backend
+- a minh bao da trao doi xong voi doi tac, can gui ban bao gia chi tiet cho ho truoc 25/8
+- quyet dinh chung: thong nhat chuyen toan bo luu tru danh ba va log qua co so du lieu SQL sqlite de de quan ly
+- nho tro ly kiem tra lich ranh tuan toi de dat lich hop review 60 phut voi ca team, dong thoi tao ban email nhap gui sep
+ps: nho kem file bao cao pdf nhe

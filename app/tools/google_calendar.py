@@ -9,15 +9,53 @@ Mô tả chi tiết:
 """
 
 import logging
+from typing import Any
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from app.core.config import settings
 from app.core.exceptions import ConfigurationError, ToolExecutionError
+from app.services.contact_repository import ContactRepository
 from app.services.oauth_service import GoogleOAuthService
 
 logger = logging.getLogger(__name__)
 
+
+def _normalize_attendees(attendees: list[Any] | None) -> list[dict[str, str]]:
+    """Chuẩn hóa danh sách người tham gia sang định dạng Google Calendar API."""
+    if not attendees:
+        return []
+
+    contacts = ContactRepository()
+    valid_attendees: list[dict[str, str]] = []
+    seen: set[str] = set()
+
+    for item in attendees:
+        if not item:
+            continue
+        email: str | None = None
+        display_name: str | None = None
+
+        if isinstance(item, dict):
+            email = item.get("email")
+            display_name = item.get("displayName") or item.get("name")
+        elif isinstance(item, str):
+            item_str = item.strip()
+            contact = contacts.find(item_str)
+            if contact and contact.get("email"):
+                email = contact["email"]
+                display_name = contact.get("name") or item_str
+            else:
+                email = item_str
+
+        if email and email.lower() not in seen:
+            seen.add(email.lower())
+            entry: dict[str, str] = {"email": email}
+            if display_name:
+                entry["displayName"] = display_name
+            valid_attendees.append(entry)
+
+    return valid_attendees
 
 def _parse_iso(value: str) -> datetime:
     """Parse chuỗi ISO 8601 sang datetime. Nếu thiếu timezone sẽ gán timezone mặc định của hệ thống."""
@@ -71,8 +109,21 @@ def _find_free_slots(
     return slots
 
 
-def calendar_freebusy(time_min: str, time_max: str, duration_minutes: int = 60) -> dict:
+def calendar_freebusy(
+    time_min: str | None = None,
+    time_max: str | None = None,
+    duration_minutes: int = 60,
+    **kwargs: Any,
+) -> dict:
     """Tra cứu khoảng thời gian bận/rảnh trên Google Calendar."""
+    # Hỗ trợ linh hoạt cả time_min/time_max, start/end, start_time/end_time
+    time_min = time_min or kwargs.get("start") or kwargs.get("start_time") or kwargs.get("timeMin")
+    time_max = time_max or kwargs.get("end") or kwargs.get("end_time") or kwargs.get("timeMax")
+    duration_minutes = int(kwargs.get("duration") or duration_minutes or 60)
+
+    if not time_min or not time_max:
+        raise ValueError(f"Missing time range for calendar_freebusy: time_min={time_min}, time_max={time_max}")
+
     logger.info(f"📅 [CALENDAR FREEBUSY START] Looking up free slots from {time_min} to {time_max} (duration={duration_minutes}m)")
     if not settings.google_enabled:
         logger.warning("📅 [CALENDAR FREEBUSY] GOOGLE_ENABLED=false: returning mock/empty result")
@@ -103,13 +154,24 @@ def calendar_freebusy(time_min: str, time_max: str, duration_minutes: int = 60) 
 
 
 def calendar_create_event(
-    title: str,
-    start: str,
-    end: str,
+    title: str | None = None,
+    start: str | None = None,
+    end: str | None = None,
     attendees: list[str] | None = None,
     description: str = "",
+    **kwargs: Any,
 ) -> dict:
     """Tạo sự kiện mới trên Google Calendar."""
+    # Hỗ trợ linh hoạt các biến thể tham số từ LLM Planner
+    title = title or kwargs.get("summary") or kwargs.get("name") or "Cuộc họp"
+    start = start or kwargs.get("start_time") or kwargs.get("time_min") or kwargs.get("timeMin")
+    end = end or kwargs.get("end_time") or kwargs.get("time_max") or kwargs.get("timeMax")
+    attendees = attendees or kwargs.get("participants") or kwargs.get("emails") or []
+    description = description or kwargs.get("details") or ""
+
+    if not start or not end:
+        raise ValueError(f"Missing start/end time for calendar_create_event: start={start}, end={end}")
+
     logger.info(f"📅 [CALENDAR CREATE EVENT START] Creating event '{title}' ({start} -> {end}) for attendees: {attendees}")
     if not settings.google_enabled:
         logger.warning("📅 [CALENDAR CREATE EVENT] GOOGLE_ENABLED=false")
@@ -117,24 +179,29 @@ def calendar_create_event(
 
     try:
         service = GoogleOAuthService().build_calendar_service()
-        body = {
+        valid_attendees = _normalize_attendees(attendees)
+        body: dict[str, Any] = {
             "summary": title,
             "description": description,
             "start": {"dateTime": start, "timeZone": settings.timezone},
             "end": {"dateTime": end, "timeZone": settings.timezone},
-            "attendees": [{"email": email} for email in (attendees or [])],
         }
+        if valid_attendees:
+            body["attendees"] = valid_attendees
+
+        # Nếu có người tham dự, gửi email thư mời ("all") để sự kiện tự đồng bộ vào Calendar của họ; nếu là task cá nhân thì ghi âm thầm ("none")
+        send_updates = kwargs.get("send_updates") or kwargs.get("sendUpdates") or ("all" if valid_attendees else "none")
 
         event = service.events().insert(
             calendarId=settings.google_calendar_id,
             body=body,
-            sendUpdates="none",
+            sendUpdates=send_updates,
         ).execute()
 
         event_id = event.get("id")
         html_link = event.get("htmlLink")
-        logger.info(f"📅 [CALENDAR CREATE EVENT DONE] Created event ID={event_id} Link={html_link}")
-        return {"event_id": event_id, "html_link": html_link}
+        logger.info(f"📅 [CALENDAR CREATE EVENT DONE] Created event ID={event_id} Link={html_link} (sendUpdates={send_updates})")
+        return {"event_id": event_id, "html_link": html_link, "attendees": valid_attendees}
     except Exception as exc:
         logger.error(f"📅 [CALENDAR CREATE EVENT ERROR] Failed to create event '{title}': {exc}")
         raise ToolExecutionError(f"Create calendar event failed: {exc}") from exc

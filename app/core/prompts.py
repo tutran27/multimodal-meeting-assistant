@@ -35,9 +35,12 @@ Quy tắc:
 2. Calendar read và web search có thể chạy song song.
 3. pdf_generator phải phụ thuộc vào các bước dữ liệu mà report cần.
 4. email_create_draft phải phụ thuộc vào pdf_generator nếu có PDF.
-5. Không tạo calendar event nếu user chỉ yêu cầu kiểm tra lịch.
-6. calendar_create_event phải approval_required=true và risk_level=external_write.
-7. Không tạo tool email_send. Hệ thống chỉ cho phép draft.
+5. Khi user yêu cầu kiểm tra lịch rảnh và đặt lịch họp vào giờ rảnh:
+    - Bước `calendar_create_event` BẮT BUỘC có `depends_on: ["<step_freebusy>"]`.
+    - `start`: "{{state.tool_results.<step_freebusy>.candidate_slots.0.start}}"
+    - `end`: "{{state.tool_results.<step_freebusy>.candidate_slots.0.end}}"
+6. Với `calendar_create_event`: Thiết lập `approval_required` theo giá trị `policy_config.require_approval_for_calendar_write` trong CONTEXT (nếu true thì approval_required=true, nếu false thì approval_required=false).
+7. Không tạo tool email_send nếu `policy_config.enable_email_send` là false. Hệ thống mặc định chỉ cho phép draft.
 8. Dùng ISO 8601 có timezone cho ngày giờ.
 9. Không vượt quá 8 bước.
 10. arguments phải là JSON đơn giản, không viết giải thích bên ngoài.
@@ -45,12 +48,18 @@ Quy tắc:
     - Đường dẫn file PDF đính kèm: "{{state.report_path}}"
     - ID phiên làm việc: "{{state.session_id}}"
     - Kết quả của bước trước: "{{state.tool_results.<step_id>.<key>}}"
-12. Với tool email_create_draft: Chỉ cần truyền các tham số cơ bản:
-    - `recipient`: email người nhận (ví dụ: default_boss_email hoặc email từ bối cảnh)
-    - `subject`: tiêu đề email phù hợp và chuyên nghiệp
-    - `attachment_path`: "{{state.report_path}}" (nếu có PDF)
-    - Không cần cố gắng viết cả bài văn dài vào `body`, hệ thống sẽ tự động soạn nội dung thư trang trọng, chỉn chu từ toàn bộ bối cảnh cuộc họp.
-13. CỰC KỲ QUAN TRỌNG: Không sinh bất kỳ suy nghĩ (thinking), giải thích, hay văn bản trò chuyện nào ngoài cấu trúc JSON của ExecutionPlan.
+12. Quy tắc lập lịch theo từng người và từng Task (Task & Deadline Scheduling):
+    - Khi có yêu cầu tạo lịch cho các đầu việc (action items): Hãy tạo các bước `calendar_create_event` riêng biệt cho từng task.
+    - `title`: Đặt tên rõ ràng dạng `[Hạn chót] <Mô tả tóm tắt task> - <Tên người phụ trách>`.
+    - `start` & `end`: Khung giờ trên ngày deadline (ví dụ: `YYYY-MM-DDT09:00:00+07:00` đến `YYYY-MM-DDT10:00:00+07:00`).
+    - `attendees`: Tra cứu danh sách `contacts` theo `owner` để lấy đúng email của người đó và truyền vào `attendees: ["email@domain.com"]` (hệ thống sẽ tự gửi thư mời riêng cho người đó). Nếu là việc của bản thân User hoặc không có người phụ trách, để `attendees: []`.
+13. Quy tắc tham số cho các công cụ (Tool Arguments):
+    - `calendar_freebusy`: `time_min` (chuỗi ISO 8601), `time_max` (chuỗi ISO 8601), `duration_minutes` (số phút, mặc định 60).
+    - `calendar_create_event`: `title` (tiêu đề), `start` (ISO 8601), `end` (ISO 8601), `attendees` (danh sách email), `description`.
+    - `web_search`: `query` (từ khóa tìm kiếm).
+    - `pdf_generator`: `{}` (không cần arguments).
+    - `email_create_draft`: `recipient` (email nhận), `subject` (tiêu đề), `attachment_path` ("{{state.report_path}}").
+14. CỰC KỲ QUAN TRỌNG: Không sinh bất kỳ suy nghĩ (thinking), giải thích, hay văn bản trò chuyện nào ngoài cấu trúc JSON của ExecutionPlan.
 
 Trả về ExecutionPlan đúng schema."""
 
@@ -82,7 +91,7 @@ REFLECTION_PROMPT = """Bạn là Reflection Validator chuyên sâu. Hãy kiểm 
 2. Evidence (0.0 - 1.0): Mọi action item và thông tin trích xuất có bằng chứng xác thực đi kèm không?
 3. Consistency (0.0 - 1.0): Nội dung trong file PDF, kết quả tìm kiếm web, lịch và email có nhất quán với nhau không?
 4. Tool execution (0.0 - 1.0): Các công cụ trong kế hoạch có thực thi thành công không?
-5. Safety (0.0 - 1.0): Tuân thủ an toàn: tuyệt đối không tự ý gửi email thật ra ngoài, không ghi đè lịch nếu chưa có xác nhận.
+5. Safety (0.0 - 1.0): Tuân thủ chính sách cấu hình `policy_config` trong CONTEXT: Tuyệt đối không tự ý gửi email thật ra ngoài nếu `enable_email_send=false`. Với việc tạo lịch: Nếu `require_approval_for_calendar_write=true` thì việc tạo lịch phải có phê duyệt trước; nếu `false` thì việc tự động tạo sự kiện lịch theo đúng yêu cầu người dùng là hoàn toàn hợp lệ và an toàn.
 
 QUY TẮC CẤU TRÚC JSON ĐẦU RA (BẮT BUỘC TUÂN THỦ 100%):
 1. `passed`: true nếu workflow đạt yêu cầu (tất cả các điểm >= 0.7), ngược lại false.

@@ -12,11 +12,14 @@ REFERENCE_PATTERN = re.compile(r"^\{\{([^}]+)\}\}$")
 
 
 def _lookup_state(path: str, state: RunState) -> Any:
-    """Tìm và lấy giá trị bên trong state theo đường dẫn (ví dụ: 'extraction.summary')."""
+    """Tìm và lấy giá trị bên trong state theo đường dẫn (ví dụ: 'tool_results.step1.candidate_slots.0.start')."""
     value: Any = state
     for part in path.split("."):
         if isinstance(value, dict):
             value = value.get(part)
+        elif isinstance(value, list) and (part.isdigit() or (part.startswith("-") and part[1:].isdigit())):
+            idx = int(part)
+            value = value[idx] if 0 <= idx < len(value) else None
         else:
             value = getattr(value, part, None)
         if value is None:

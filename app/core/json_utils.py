@@ -13,15 +13,18 @@ logger = logging.getLogger(__name__)
 
 
 def _sanitize_json_string(text: str) -> str:
-    """Loại bỏ markdown fences và trích xuất chuỗi JSON từ văn bản LLM."""
+    """Loại bỏ markdown fences, thinking tags và trích xuất chuỗi JSON từ văn bản LLM."""
     text = text.strip()
 
-    # Ưu tiên lấy nội dung bên trong markdown block ```json ... ``` hoặc ``` ... ```
-    fence_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, flags=re.DOTALL)
+    # Bỏ thẻ suy nghĩ <think>...</think> nếu có từ các mô hình reasoning
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
+
+    # 1. Ưu tiên lấy nội dung bên trong markdown block ```json ... ``` hoặc ``` ... ```
+    fence_match = re.search(r"```(?:json)?\s*(\{.*\})\s*```", text, flags=re.DOTALL)
     if fence_match:
         return fence_match.group(1).strip()
 
-    # Tìm cặp ngoặc nhọn { ... } ngoài cùng
+    # 2. Tìm cặp ngoặc nhọn { ... } ngoài cùng
     start_idx = text.find("{")
     end_idx = text.rfind("}")
     if start_idx != -1 and end_idx != -1 and end_idx > start_idx:

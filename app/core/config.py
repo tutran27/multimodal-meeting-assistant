@@ -87,7 +87,7 @@ class Settings(BaseSettings):
     enable_parallel_execution: bool = True
 
     # Safety
-    require_approval_for_calendar_write: bool = True
+    require_approval_for_calendar_write: bool = False
     enable_email_send: bool = False
 
     # Testing

@@ -68,7 +68,7 @@ class Workflow:
 
             if label == "audio":
                 state.transcript = result
-                logger.info(f"[{state.session_id}] ✅ Audio transcribed ({len(result.segments) if result else 0} segments)")
+                logger.info(f"[{state.session_id}] ✅ Audio transcribed ({len(result) if result else 0} segments)")
             elif label == "image":
                 state.ocr_blocks = result
                 logger.info(f"[{state.session_id}] ✅ OCR completed ({len(result)} text blocks)")
