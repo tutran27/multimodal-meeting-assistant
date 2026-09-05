@@ -1,0 +1,24 @@
+-- ==============================================================================
+-- Migration: 004_rls_policies.sql
+-- Mục đích: Kích hoạt bảo mật phân quyền đa người dùng (Row Level Security - RLS)
+-- ==============================================================================
+-- Cơ chế hoạt động cho 7 bảng nghiệp vụ cốt lõi:
+-- 1. Kích hoạt RLS:
+--    - ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+--    - ALTER TABLE user_credentials ENABLE ROW LEVEL SECURITY;
+--    - ALTER TABLE contacts ENABLE ROW LEVEL SECURITY;
+--    - ALTER TABLE input_files ENABLE ROW LEVEL SECURITY;
+--    - ALTER TABLE workflow_runs ENABLE ROW LEVEL SECURITY;
+--    - ALTER TABLE action_items ENABLE ROW LEVEL SECURITY;
+--    - ALTER TABLE approval_requests ENABLE ROW LEVEL SECURITY;
+--
+-- 2. Thiết lập Policy: "Người dùng chỉ có quyền xem và sửa dữ liệu của chính mình":
+--    - CREATE POLICY "Users own data" ON <table>
+--      FOR ALL USING (auth.uid() = user_id);
+--
+-- 3. Lưu ý bảo mật:
+--    - Backend FastAPI (chạy ngầm) sử dụng connection pool nội bộ.
+--    - Khi xác thực JWT từ client gửi lên, câu lệnh SQL sẽ tự động lọc `WHERE user_id = $1`.
+--    - Client truy cập trực tiếp qua PostgREST sẽ tuân thủ tuyệt đối RLS dựa trên auth.uid().
+--
+-- Ghi chú: File này hiện chỉ là khung mô tả.

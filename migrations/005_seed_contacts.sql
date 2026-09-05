@@ -1,0 +1,17 @@
+-- ==============================================================================
+-- Migration: 005_seed_contacts.sql
+-- Mục đích: Chuyển giao dữ liệu mẫu ban đầu từ contacts.json vào bảng contacts
+-- ==============================================================================
+-- Nội dung chuyển đổi dự kiến:
+-- 1. Trích xuất danh sách liên hệ mẫu từ file data/contacts.json hiện tại:
+--    - Nguyễn Văn A (nva@company.com, Product Manager)
+--    - Trần Thị B (ttb@company.com, Tech Lead)
+--    - Lê Văn C (lvc@partner.com, External Partner)
+--    - Phạm Thị D (ptd@company.com, QA Lead)
+--    - Hoàng Văn E (hve@company.com, Designer)
+--
+-- 2. Chuyển thành các câu lệnh SQL:
+--    INSERT INTO contacts (user_id, name, email, role, company, aliases)
+--    VALUES (...);
+--
+-- Ghi chú: File này hiện chỉ là khung mô tả.

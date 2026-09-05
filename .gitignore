@@ -90,3 +90,15 @@ desktop.ini
 **/checkpoints/
 .agents/
 .gemini/
+
+# ==========================================
+# ERD Diagrams & Generated Schemas
+# ==========================================
+erd_diagram.png
+erd_diagram.svg
+
+# ==========================================
+# Markdown Files
+# ==========================================
+*.md
+!README.md
