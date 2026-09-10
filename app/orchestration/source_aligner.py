@@ -8,21 +8,35 @@ Mô tả chi tiết:
 - Tạo cơ sở để liên kết `evidence_ids` vào `ActionItem`, giúp truy vết nguồn gốc và chống bịa đặt (hallucination).
 """
 
-from sentence_transformers import CrossEncoder
+from typing import Any
 from app.core.config import settings
 from app.schemas.evidence import EvidenceRef
 from app.core.constants import SourceType
 
-model = CrossEncoder(
-    "BAAI/bge-reranker-v2-m3",
-    model_kwargs={"token": settings.hf_token} if settings.hf_token else None,
-)
-  
+_model: Any = None
+
+
+def get_model() -> Any:
+    """Khởi tạo mô hình Cross-Encoder theo cơ chế Lazy Loading (chỉ tải khi thực thi tác vụ)."""
+    global _model
+    if _model is None:
+        from sentence_transformers import CrossEncoder
+        _model = CrossEncoder(
+            "BAAI/bge-reranker-v2-m3",
+            model_kwargs={"token": settings.hf_token} if settings.hf_token else None,
+        )
+    return _model
+
+
 def align_sources(
     evidences: list[EvidenceRef],
     threshold: float = 0.7,
 ) -> list[dict]:
     """Gom nhóm các mẩu bằng chứng có ngữ nghĩa tương đồng bằng mô hình Cross-Encoder."""
+    if not evidences:
+        return []
+
+    model = get_model()
     groups: list[dict] = []
 
     for item in evidences:
@@ -77,6 +91,6 @@ if __name__ == "__main__":
         ),
     ]
 
-    res=align_sources_cross_encoder(sample_evidence)
+    res = align_sources(sample_evidence)
     for g in res:
         print(g)

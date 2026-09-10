@@ -25,14 +25,31 @@ class Settings(BaseSettings):
     upload_dir: Path = Path("data/inputs")
     output_dir: Path = Path("outputs")
     temp_dir: Path = Path("data/temp")
-    contacts_file: Path = Path("data/contacts.json")
     max_upload_size_mb: int = 100
     allowed_audio_extensions: list[str] = [".mp3", ".wav", ".m4a", ".ogg", ".webm", ".flac"]
     allowed_image_extensions: list[str] = [".jpg", ".jpeg", ".png", ".webp"]
     allowed_script_extensions: list[str] = [".txt", ".md", ".docx", ".pdf"]
     
-    # Database
-    database_url: str = "sqlite:///./data/app.db"
+    # Database (PostgreSQL / Supabase asyncpg)
+    database_url: str = Field(
+        default="postgresql://postgres:postgres@localhost:5432/postgres",
+        validation_alias="DATABASE_URL",
+    )
+    db_pool_min_size: int = Field(default=2, validation_alias="DB_POOL_MIN_SIZE")
+    db_pool_max_size: int = Field(default=10, validation_alias="DB_POOL_MAX_SIZE")
+    db_pool_timeout: int = Field(default=30, validation_alias="DB_POOL_TIMEOUT")
+
+    # Supabase (Auth & Storage)
+    supabase_url: str | None = Field(default=None, validation_alias="SUPABASE_URL")
+    supabase_anon_key: str | None = Field(default=None, validation_alias="SUPABASE_ANON_KEY")
+    supabase_service_role_key: str | None = Field(default=None, validation_alias="SUPABASE_SERVICE_ROLE_KEY")
+    supabase_jwt_secret: str | None = Field(default=None, validation_alias="SUPABASE_JWT_SECRET")
+    supabase_storage_bucket_inputs: str = Field(
+        default="meeting-inputs", validation_alias="SUPABASE_STORAGE_BUCKET_INPUTS"
+    )
+    supabase_storage_bucket_reports: str = Field(
+        default="meeting-reports", validation_alias="SUPABASE_STORAGE_BUCKET_REPORTS"
+    )
     
     # Groq LLM and STT
     groq_api_key: str | None = os.getenv("GROQ_API_KEY")

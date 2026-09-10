@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS workflow_runs (
     title TEXT,
     user_request TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'created' CHECK (
-        status IN ('created', 'extracting', 'planning', 'executing', 'completed', 'failed')
+        status IN ('created', 'extracting', 'planning', 'executing', 'validating', 'completed', 'failed')
     ),
     script_type TEXT CHECK (
         script_type IN ('actual_transcript', 'meeting_minutes', 'prepared_agenda', 'unknown')

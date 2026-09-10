@@ -12,8 +12,6 @@ Mô tả chi tiết:
 import logging
 from pathlib import Path
 from huggingface_hub import snapshot_download
-from paddleocr import PaddleOCR
-
 from app.core.config import settings
 from app.core.constants import SourceType
 from app.core.exceptions import ToolExecutionError
@@ -30,6 +28,7 @@ def extract_image_text(file_path: str | Path) -> list[EvidenceRef]:
         raise FileNotFoundError(path)
 
     try:
+        from paddleocr import PaddleOCR
         rec_model_dir = snapshot_download(repo_id=settings.ocr_rec_model_repo)
         pipeline = PaddleOCR(
             text_recognition_model_dir=rec_model_dir,

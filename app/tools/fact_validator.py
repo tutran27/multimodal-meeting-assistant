@@ -5,7 +5,7 @@ Vai trò: Công cụ kiểm tra và đối soát tính xác thực (Fact Validat
 Mô tả chi tiết:
 - Kiểm tra các đầu việc (`ActionItem`) có đính kèm bằng chứng (`evidence_ids`) hợp lệ hay không, tự động cập nhật trạng thái kiểm chứng (`VerificationStatus`).
 - Xác thực tính hợp lệ của hạn chót (`deadline`) và cảnh báo nếu deadline nằm trong quá khứ hoặc sai định dạng ngày tháng.
-- Chuẩn hóa thông tin người phụ trách (`owner`) với danh bạ hệ thống (`ContactRepository`) và kiểm tra định dạng email người nhận.
+- Chuẩn hóa thông tin người phụ trách (`owner`) với danh bạ người dùng từ database và kiểm tra định dạng email người nhận.
 - Trả về kết quả đối soát (`FactValidationResult`) gồm thực thể đã chuẩn hóa và danh sách cảnh báo/vấn đề phát hiện (`ValidationIssue`).
 """
 
@@ -16,17 +16,19 @@ from datetime import date
 from app.core.constants import VerificationStatus
 from app.schemas.extraction import MeetingExtraction
 from app.schemas.validation import FactValidationResult, ValidationIssue
-from app.services.contact_repository import ContactRepository
 
 logger = logging.getLogger(__name__)
 
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
-def validate_extraction(extraction: MeetingExtraction) -> FactValidationResult:
+def validate_extraction(
+    extraction: MeetingExtraction,
+    contacts: list[dict] | None = None,
+) -> FactValidationResult:
     logger.info(f"🔍 [FACT VALIDATOR START] Validating {len(extraction.action_items)} action items against contacts & facts...")
     issues: list[ValidationIssue] = []
-    contacts = ContactRepository()
+    contact_list = contacts or []
     normalized_entities: dict = {"contacts": {}}
 
     for item in extraction.action_items:
@@ -59,11 +61,15 @@ def validate_extraction(extraction: MeetingExtraction) -> FactValidationResult:
                     )
                 )
 
-        if item.owner:
-            contact = contacts.find(item.owner)
-            if contact:
-                normalized_entities["contacts"][item.owner] = contact
-                logger.info(f"🔍 [FACT VALIDATOR] Matched owner '{item.owner}' to contact: {contact.get('email')}")
+        if item.owner and contact_list:
+            owner_lower = item.owner.strip().lower()
+            matched = next(
+                (c for c in contact_list if any(owner_lower in str(c.get(k, "")).lower() for k in ("name", "email", "role"))),
+                None
+            )
+            if matched:
+                normalized_entities["contacts"][item.owner] = matched
+                logger.info(f"🔍 [FACT VALIDATOR] Matched owner '{item.owner}' to contact: {matched.get('email')}")
 
     for name, contact in normalized_entities["contacts"].items():
         email = contact.get("email")

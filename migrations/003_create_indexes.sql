@@ -25,3 +25,17 @@
 --    - idx_contacts_aliases ON contacts USING gin (aliases)
 --
 -- Ghi chú: File này hiện chỉ là khung mô tả.
+
+
+CREATE INDEX IF NOT EXISTS idx_workflow_runs_user_id ON workflow_runs(user_id);
+CREATE INDEX IF NOT EXISTS idx_workflow_runs_created_at ON workflow_runs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_workflow_runs_session_id ON workflow_runs(session_id);
+CREATE INDEX IF NOT EXISTS idx_workflow_runs_status ON workflow_runs(status);
+
+CREATE INDEX IF NOT EXISTS idx_action_items_user_id ON action_items(user_id);
+CREATE INDEX IF NOT EXISTS idx_action_items_run_id ON action_items(run_id);
+CREATE INDEX IF NOT EXISTS idx_action_items_owner_contact_id ON action_items(owner_contact_id);
+CREATE INDEX IF NOT EXISTS idx_action_items_deadline ON action_items(deadline);
+CREATE INDEX IF NOT EXISTS idx_action_items_priority ON action_items(priority);
+CREATE INDEX IF NOT EXISTS idx_action_items_task_status ON action_items(task_status);
+CREATE INDEX IF NOT EXISTS idx_action_items_verification_status ON action_items(verification_status);

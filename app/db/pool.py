@@ -1,48 +1,38 @@
-"""Quản lý Connection Pool asyncpg kết nối tới PostgreSQL (Supabase).
-
-Nhiệm vụ & Chức năng dự kiến:
-1. `init_db_pool()`:
-   - Đọc `database_url` từ `app.core.config.get_settings()`.
-   - Khởi tạo singleton `asyncpg.Pool` (min_size=2, max_size=10, timeout=60s).
-   - Được gọi trong sự kiện `lifespan` lúc FastAPI khởi động (`app/main.py`).
-
-2. `get_db_pool()`:
-   - Trả về singleton connection pool đang hoạt động.
-   - Phục vụ Dependency Injection trong FastAPI routers.
-
-3. `close_db_pool()`:
-   - Đóng toàn bộ các kết nối trong pool một cách an toàn (graceful shutdown)
-     khi server tắt.
-
-"""
-
+"""Quản lý Connection Pool asyncpg kết nối tới PostgreSQL (Supabase)."""
+import logging
 import asyncpg
 from app.core.config import settings
 
+logger = logging.getLogger(__name__)
+
 pool: asyncpg.Pool | None = None
 
-DB_URL= settings.database_url
 
-async def init_db():
+async def init_db() -> asyncpg.Pool:
+    """Khởi tạo singleton connection pool tới database."""
     global pool
-    if pool is None or pool.is_closed():
-        pool=await asyncpg.create_pool(
-            DSN=DB_URL,
-            min_size=2,
-            max_size=5,
+    if pool is None or getattr(pool, "_closed", False):
+        pool = await asyncpg.create_pool(
+            dsn=settings.database_url,
+            min_size=settings.db_pool_min_size,
+            max_size=settings.db_pool_max_size,
+            command_timeout=settings.db_pool_timeout,
             statement_cache_size=0,
         )
     return pool
-   
-async def close_db():
+
+
+async def close_db() -> None:
+    """Đóng toàn bộ các kết nối trong pool một cách an toàn."""
     global pool
     if pool is not None:
         await pool.close()
         pool = None
 
-async def get_pool() -> asyncpg.Pool:
-    global pool
-    if pool is None or pool.is_closed():
-        pool = await init_db()
-    return pool
 
+def get_pool() -> asyncpg.Pool:
+    """Lấy connection pool hiện tại. Ném lỗi nếu chưa khởi tạo qua lifespan."""
+    global pool
+    if pool is None or getattr(pool, "_closed", False):
+        raise RuntimeError("Database pool chưa được khởi tạo. Hãy đảm bảo lifespan đã chạy 'await init_db()'.")
+    return pool

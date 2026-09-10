@@ -11,3 +11,9 @@
 --    - Cung cấp các hàm tạo UUID (`gen_random_uuid()`) và mã hóa/giải mã khóa token bí mật.
 --
 -- Ghi chú: File này hiện chỉ là khung mô tả.
+
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS unaccent;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS vector;  

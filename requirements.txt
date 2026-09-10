@@ -37,3 +37,9 @@ google-auth-oauthlib>=1.2.0
 
 # Frontend UI
 streamlit>=1.38.0
+
+
+pydantic
+asyncpg
+dotenv
+pydantic-settings

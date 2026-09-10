@@ -23,20 +23,17 @@ from app.schemas.plan import ExecutionPlan
 from app.schemas.state import RunState
 from app.services.llm_service import get_llm
 
-from app.services.contact_repository import ContactRepository
-
 logger = logging.getLogger(__name__)
 
 
-def create_plan(state: RunState) -> ExecutionPlan:
+def create_plan(state: RunState, contacts: list[dict] | None = None) -> ExecutionPlan:
     logger.info(f"📋 [PLANNER START] Generating plan for request: '{state.user_request}'")
-    contacts = ContactRepository().list_contacts()
     context = {
         "request": state.user_request,
         "summary": state.extraction.summary,
         "organizations": state.extraction.organizations,
         "action_items": [item.model_dump(mode="json") for item in state.extraction.action_items],
-        "contacts": contacts,
+        "contacts": contacts or [],
         "policy_config": {
             "require_approval_for_calendar_write": settings.require_approval_for_calendar_write,
             "enable_email_send": settings.enable_email_send,

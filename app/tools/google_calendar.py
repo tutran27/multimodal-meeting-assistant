@@ -15,7 +15,6 @@ from zoneinfo import ZoneInfo
 
 from app.core.config import settings
 from app.core.exceptions import ConfigurationError, ToolExecutionError
-from app.services.contact_repository import ContactRepository
 from app.services.oauth_service import GoogleOAuthService
 
 logger = logging.getLogger(__name__)
@@ -26,7 +25,6 @@ def _normalize_attendees(attendees: list[Any] | None) -> list[dict[str, str]]:
     if not attendees:
         return []
 
-    contacts = ContactRepository()
     valid_attendees: list[dict[str, str]] = []
     seen: set[str] = set()
 
@@ -41,12 +39,10 @@ def _normalize_attendees(attendees: list[Any] | None) -> list[dict[str, str]]:
             display_name = item.get("displayName") or item.get("name")
         elif isinstance(item, str):
             item_str = item.strip()
-            contact = contacts.find(item_str)
-            if contact and contact.get("email"):
-                email = contact["email"]
-                display_name = contact.get("name") or item_str
-            else:
+            if "@" in item_str:
                 email = item_str
+            else:
+                display_name = item_str
 
         if email and email.lower() not in seen:
             seen.add(email.lower())

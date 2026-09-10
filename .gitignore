@@ -21,14 +21,23 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+*.manifest
+*.spec
+
+# Testing & Coverage
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 .coverage
+.coverage.*
 htmlcov/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
 
 # ==========================================
-# Virtual Environments
+# Virtual Environments & Conda
 # ==========================================
 .venv/
 venv/
@@ -36,6 +45,8 @@ ENV/
 env/
 env.bak/
 venv.bak/
+.conda/
+conda-env/
 
 # ==========================================
 # Secrets, Tokens & Environment Files
@@ -45,10 +56,29 @@ venv.bak/
 !.env.example
 *.pem
 *.key
+*.cert
+*.crt
 **/*client_secret*.json
 **/*token*.json
 **/*credentials*.json
+.streamlit/secrets.toml
 **/.streamlit/secrets.toml
+
+# ==========================================
+# AI Models, Weights & Caches
+# ==========================================
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.onnx
+*.engine
+.cache/
+.paddleocr/
+cached_models/
+hf_cache/
+models/*
+!models/.gitkeep
 
 # ==========================================
 # Database & Logs
@@ -83,9 +113,11 @@ credentials/*
 .idea/
 *.swp
 *.swo
+*~
 .DS_Store
 Thumbs.db
 desktop.ini
+.directory
 .ipynb_checkpoints/
 **/checkpoints/
 .agents/
@@ -98,7 +130,7 @@ erd_diagram.png
 erd_diagram.svg
 
 # ==========================================
-# Markdown Files
+# Markdown & Documentation Files
 # ==========================================
 *.md
 !README.md
