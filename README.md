@@ -46,12 +46,11 @@ flowchart TD
     %% 1. TẦNG ĐẦU VÀO ĐA PHƯƠNG THỨC
     %% =============================================================
     subgraph L1 ["📥 1. MULTI-MODAL INGESTION & PREPROCESSING"]
-        direction LR
-        A1["🎙️ <b>Audio Stream</b><br/>Groq Whisper STT"]
-        A2["🖼️ <b>Visual Stream</b><br/>PaddleOCR PP-OCRv6"]
-        A3["📄 <b>Doc / Script</b><br/>LangChain Parser"]
+        A1["<div style='text-align:center'>&nbsp;🎙️ <b>Audio Stream</b>&nbsp;<br/>&nbsp;Groq Whisper STT&nbsp;</div>"]
+        A2["<div style='text-align:center'>&nbsp;🖼️ <b>Visual Stream</b>&nbsp;<br/>&nbsp;PaddleOCR PP-OCRv6&nbsp;</div>"]
+        A3["<div style='text-align:center'>&nbsp;📄 <b>Doc / Script</b>&nbsp;<br/>&nbsp;LangChain Parser&nbsp;</div>"]
         
-        A1 & A2 & A3 --> EV["📑 <b>Unified Evidence Stream</b><br/><i>EvidenceRef (UUID, SHA256, Source Hash)</i>"]
+        A1 & A2 & A3 --> EV["<div style='text-align:center'>&nbsp;📑 <b>Unified Evidence Stream</b>&nbsp;<br/>&nbsp;EvidenceRef (UUID, Source Hash)&nbsp;</div>"]
     end
 
     %% =============================================================
@@ -59,10 +58,10 @@ flowchart TD
     %% =============================================================
     subgraph L2 ["🧠 2. COGNITIVE MULTI-AGENT ORCHESTRATION"]
         direction LR
-        AG1["⚡ <b>Extractor Agent</b><br/><i>Async Map-Reduce</i>"]
-        AG2["🔍 <b>Fact Validator</b><br/><i>Cross-Modal Grounding</i>"]
-        AG3["📋 <b>Planner Agent</b><br/><i>DAG Tool Execution Plan</i>"]
-        AG4["🛡️ <b>Policy Gate</b><br/><i>Human-in-the-Loop</i>"]
+        AG1["<div style='text-align:center'>&nbsp;⚡ <b>Extractor Agent</b>&nbsp;<br/>&nbsp;Async Map-Reduce LLM&nbsp;</div>"]
+        AG2["<div style='text-align:center'>&nbsp;🔍 <b>Fact Validator</b>&nbsp;<br/>&nbsp;Cross-Modal Grounding&nbsp;</div>"]
+        AG3["<div style='text-align:center'>&nbsp;📋 <b>Planner Agent</b>&nbsp;<br/>&nbsp;DAG Execution Planner&nbsp;</div>"]
+        AG4["<div style='text-align:center'>&nbsp;🛡️ <b>Policy Gate</b>&nbsp;<br/>&nbsp;Human-in-the-Loop&nbsp;</div>"]
         
         AG1 --> AG2 --> AG3 --> AG4
     end
@@ -72,63 +71,62 @@ flowchart TD
     %% =============================================================
     subgraph L3 ["🛠️ 3. TOOL EXECUTION MESH"]
         direction LR
-        T1["🌐 <b>Tavily Search</b><br/><i>Web Reconnaissance</i>"]
-        T2["📅 <b>Google Calendar</b><br/><i>FreeBusy & Events</i>"]
-        T3["✉️ <b>Gmail API</b><br/><i>OAuth2 Draft Creator</i>"]
-        T4["📄 <b>ReportLab</b><br/><i>A4 Unicode PDF</i>"]
+        T1["<div style='text-align:center'>&nbsp;🌐 <b>Tavily Search</b>&nbsp;<br/>&nbsp;Web Reconnaissance&nbsp;</div>"]
+        T2["<div style='text-align:center'>&nbsp;📅 <b>Google Calendar</b>&nbsp;<br/>&nbsp;FreeBusy & Events&nbsp;</div>"]
+        T3["<div style='text-align:center'>&nbsp;✉️ <b>Gmail API</b>&nbsp;<br/>&nbsp;OAuth2 Draft Creator&nbsp;</div>"]
+        T4["<div style='text-align:center'>&nbsp;📄 <b>ReportLab</b>&nbsp;<br/>&nbsp;A4 Unicode PDF&nbsp;</div>"]
     end
 
     %% =============================================================
-    %% 4. KHO CƠ SỞ DỮ LIỆU DOANH NGHIỆP (DATABASE & STORAGE)
+    %% 4. TẦNG THẨM ĐỊNH & ĐẦU RA
     %% =============================================================
-    subgraph L_DB ["🗄️ 4. KHO DỮ LIỆU DOANH NGHIỆP (POSTGRESQL / SUPABASE PERSISTENCE)"]
-        direction LR
-        DB_POOL[("⚡ <b>AsyncPG Pool</b><br/><i>Zero-Cache Manager</i>")]
+    subgraph L4 ["📤 4. REFLECTION AUDIT & EXECUTIVE DELIVERABLES"]
+        REF["<div style='text-align:center'>&nbsp;🛡️ <b>Reflection Validator</b>&nbsp;<br/>&nbsp;5-Criteria Quality Gate (Score ≥ 0.7)&nbsp;</div>"]
         
-        DB1["👥 <b>Danh Bạ Liên Hệ</b><br/><i>contacts (pg_trgm Fuzzy)</i>"]
-        DB2["🔄 <b>Phiên Họp & File</b><br/><i>workflow_runs & input_files</i>"]
-        DB3["✅ <b>Nhiệm Vụ & Phê Duyệt</b><br/><i>action_items & approval_requests</i>"]
-        DB4["🔐 <b>Tài Khoản & Quyền</b><br/><i>users & credentials (RLS)</i>"]
-        
-        DB_POOL --- DB1 & DB2 & DB3 & DB4
-    end
-
-    %% =============================================================
-    %% 5. TẦNG THẨM ĐỊNH & ĐẦU RA
-    %% =============================================================
-    subgraph L4 ["📤 5. REFLECTION AUDIT & EXECUTIVE DELIVERABLES"]
-        direction LR
-        REF["🛡️ <b>Reflection Validator</b><br/><i>5-Criteria Quality Gate (Score ≥ 0.7)</i>"]
-        
-        OUT1["📜 <b>Meeting Summary</b>"]
-        OUT2["✅ <b>Action Items</b>"]
-        OUT3["📑 <b>PDF Report</b>"]
-        OUT4["📨 <b>Gmail Draft</b>"]
+        OUT1["<div style='text-align:center'>&nbsp;📜 <b>Meeting Summary</b>&nbsp;<br/>&nbsp;Structured Digest&nbsp;</div>"]
+        OUT2["<div style='text-align:center'>&nbsp;✅ <b>Action Items</b>&nbsp;<br/>&nbsp;Assigned & Verified&nbsp;</div>"]
+        OUT3["<div style='text-align:center'>&nbsp;📑 <b>PDF Report</b>&nbsp;<br/>&nbsp;Executive Document&nbsp;</div>"]
+        OUT4["<div style='text-align:center'>&nbsp;📨 <b>Gmail Draft</b>&nbsp;<br/>&nbsp;Pre-composed Email&nbsp;</div>"]
         
         REF --> OUT1 & OUT2 & OUT3 & OUT4
+    end
+
+    %% =============================================================
+    %% 5. KHO CƠ SỞ DỮ LIỆU DOANH NGHIỆP (DATABASE & STORAGE)
+    %% =============================================================
+    subgraph L_DB ["🗄️ 5. KHO DỮ LIỆU DOANH NGHIỆP (POSTGRESQL / SUPABASE PERSISTENCE)"]
+        direction TB
+        DB_POOL[("<div style='text-align:center'>&nbsp;⚡ <b>AsyncPG Pool</b>&nbsp;<br/>&nbsp;Zero-Cache DB Manager&nbsp;</div>")]
+        
+        DB1["<div style='text-align:center'>&nbsp;👥 <b>Danh Bạ Liên Hệ</b>&nbsp;<br/>&nbsp;contacts (pg_trgm)&nbsp;</div>"]
+        DB2["<div style='text-align:center'>&nbsp;🔄 <b>Phiên Họp & File</b>&nbsp;<br/>&nbsp;workflow_runs & files&nbsp;</div>"]
+        DB3["<div style='text-align:center'>&nbsp;✅ <b>Việc & Phê Duyệt</b>&nbsp;<br/>&nbsp;action_items & approvals&nbsp;</div>"]
+        DB4["<div style='text-align:center'>&nbsp;🔐 <b>Tài Khoản & Quyền</b>&nbsp;<br/>&nbsp;users & credentials (RLS)&nbsp;</div>"]
+        
+        DB_POOL --> DB1 & DB2 & DB3 & DB4
     end
 
     %% =============================================================
     %% MAIN PIPELINE FLOW CONNECTIONS
     %% =============================================================
     EV ==> AG1
-    AG2 <===>|"Tra danh bạ mờ"| DB1
-    AG4 ==> L3
-    L3 ==> REF
+    AG4 ==> T1 & T2 & T3 & T4
+    T1 & T2 & T3 & T4 ==> REF
     REF ==>|"Đồng bộ kết quả & lưu trữ"| DB_POOL
-    REF ==> L4
 
     %% =============================================================
     %% STYLING
     %% =============================================================
-    classDef default fill:#1e1e2e,stroke:#45475a,stroke-width:1px,color:#cdd6f4;
-    classDef layerBox fill:#181825,stroke:#89b4fa,stroke-width:2px,color:#89b4fa;
-    classDef dbBox fill:#181825,stroke:#a6e3a1,stroke-width:2px,color:#a6e3a1;
-    classDef toolBox fill:#181825,stroke:#fab387,stroke-width:1.5px,color:#fab387;
+    classDef default fill:#1e1e2e,stroke:#45475a,stroke-width:1.5px,color:#cdd6f4,text-align:center;
+    classDef layerBox fill:#181825,stroke:#89b4fa,stroke-width:2px,color:#89b4fa,text-align:center;
+    classDef dbBox fill:#181825,stroke:#a6e3a1,stroke-width:2px,color:#a6e3a1,text-align:center;
+    classDef toolBox fill:#181825,stroke:#fab387,stroke-width:1.5px,color:#fab387,text-align:center;
+    classDef outBox fill:#1e1e2e,stroke:#cba6f7,stroke-width:1.5px,color:#cdd6f4,text-align:center;
 
     class L1,L2,L4 layerBox;
     class L3 toolBox;
     class L_DB,DB_POOL dbBox;
+    class OUT1,OUT2,OUT3,OUT4 outBox;
 ```
 
 ---

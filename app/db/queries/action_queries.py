@@ -20,7 +20,7 @@ def _parse_uuid(val: Any) -> Optional[str]:
         return None
     val_str = str(val).strip()
     return val_str if val_str else None
-
+    
 
 async def batch_insert_action_items(
     run_id: str,
