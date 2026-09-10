@@ -12,6 +12,7 @@ class ActionItem(BaseModel):
     action_id: str
     description: str
     owner: str | None = None
+    owner_contact_id: str | None = None
     deadline: str | None = None
     priority: str = "medium"
     duration_minutes: int | None = None

@@ -15,6 +15,13 @@ def _parse_datetime(val: Any) -> Optional[datetime]:
     return val if isinstance(val, datetime) else None
 
 
+def _parse_uuid(val: Any) -> Optional[str]:
+    if not val:
+        return None
+    val_str = str(val).strip()
+    return val_str if val_str else None
+
+
 async def batch_insert_action_items(
     run_id: str,
     user_id: str,
@@ -30,16 +37,17 @@ async def batch_insert_action_items(
         status_val = d.get("status", "unverified")
         verification_status = status_val.value if hasattr(status_val, "value") else str(status_val)
         evidence_json = json.dumps(d.get("evidence_ids", []), ensure_ascii=False)
+        owner_contact_id = _parse_uuid(d.get("owner_contact_id"))
 
         row = await get_pool().fetchrow(
             """
             INSERT INTO action_items (
-                run_id, user_id, action_id, description, owner_name,
+                run_id, user_id, action_id, description, owner_name, owner_contact_id,
                 deadline, priority, duration_minutes, verification_status, evidence_refs
             )
             VALUES (
-                $1::uuid, $2::uuid, $3, $4, $5,
-                $6, $7, $8, $9, $10::jsonb
+                $1::uuid, $2::uuid, $3, $4, $5, $6::uuid,
+                $7, $8, $9, $10, $11::jsonb
             )
             RETURNING *
             """,
@@ -48,6 +56,7 @@ async def batch_insert_action_items(
             d.get("action_id"),
             d.get("description", ""),
             d.get("owner"),
+            owner_contact_id,
             _parse_datetime(d.get("deadline")),
             d.get("priority", "medium").lower(),
             d.get("duration_minutes"),

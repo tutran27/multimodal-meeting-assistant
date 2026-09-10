@@ -53,7 +53,7 @@ class Settings(BaseSettings):
     
     # Groq LLM and STT
     groq_api_key: str | None = os.getenv("GROQ_API_KEY")
-    groq_llm_model: str = os.getenv("GROQ_LLM_MODEL", "gpt-oss-20b")
+    groq_llm_model: str = os.getenv("GROQ_LLM_MODEL", "openai/gpt-oss-20b")
     groq_stt_model: str = os.getenv("GROQ_STT_MODEL", "whisper-large-v3-turbo")
     
     # OpenRouter LLM
@@ -64,7 +64,7 @@ class Settings(BaseSettings):
     hf_token: str | None = os.getenv("HF_TOKEN")
     
     llm_temperature: float = 0.0
-    llm_max_tokens: int | None = 8192
+    llm_max_tokens: int | None = 32000
     llm_timeout_seconds: int = 60
     llm_max_retries: int = 2
     stt_language: str = "vi"

@@ -68,8 +68,10 @@ def validate_extraction(
                 None
             )
             if matched:
+                if matched.get("id"):
+                    item.owner_contact_id = str(matched["id"])
                 normalized_entities["contacts"][item.owner] = matched
-                logger.info(f"🔍 [FACT VALIDATOR] Matched owner '{item.owner}' to contact: {matched.get('email')}")
+                logger.info(f"🔍 [FACT VALIDATOR] Matched owner '{item.owner}' to contact: {matched.get('email')} (id: {item.owner_contact_id})")
 
     for name, contact in normalized_entities["contacts"].items():
         email = contact.get("email")
